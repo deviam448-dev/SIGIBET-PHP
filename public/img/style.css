@@ -1,0 +1,323 @@
+:root {
+    /* Paleta boutique y sobria */
+    --bs-primary: #C99297;
+    --bs-primary-rgb: 201, 146, 151;
+    --bs-dark: #4C3C38;
+    --bs-dark-rgb: 76, 60, 56;
+    --bs-warning: #D9AA72;
+    --bs-danger: #C86E6F;
+    --bs-body-bg: #F7F3F1;
+    --bs-body-color: #433833;
+
+    /* Custom Variables */
+    --primary-hover: #B97B81;
+    --primary-light: #F3E5E8;
+    --dark-surface: #EFE2DE;
+    --navbar-bg: rgba(76, 60, 56, 0.96);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--bs-body-color);
+    overflow-x: hidden;
+    background: linear-gradient(180deg, #fdfaf8 0%, #f3efee 100%);
+}
+
+/* Forzar visibilidad de texto muted en secciones claras */
+.features-section .text-muted {
+    color: #6B4A40 !important;
+    opacity: 1 !important;
+}
+
+.features-section .text-dark {
+    color: #332522 !important;
+}
+
+/* Custom Colors & Utilities */
+.text-primary-custom {
+    color: #BA7F85 !important;
+}
+
+.bg-dark-custom {
+    background-color: var(--navbar-bg) !important;
+    backdrop-filter: blur(12px);
+}
+
+/* Sombras coloreadas y animaciones para Botones Bootstrap Nativos */
+.btn-primary {
+    background: linear-gradient(135deg, #D7B0B7 0%, #C79198 100%) !important;
+    border-color: #D7B0B7 !important;
+    color: #fff !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 5px 16px rgba(201, 146, 151, 0.24);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #C88C93 0%, #B7777F 100%) !important;
+    border-color: #C88C93 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(201, 146, 151, 0.35);
+}
+
+.btn-danger, .btn-outline-danger:hover {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 10px rgba(232, 93, 93, 0.3);
+}
+
+.btn-danger:hover, .btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(232, 93, 93, 0.5);
+}
+
+.btn-warning {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(244, 196, 48, 0.3);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(244, 196, 48, 0.5);
+}
+
+/* Efecto de logo */
+.brand-logo-anim {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sidebar-brand:hover .brand-logo-anim {
+    transform: scale(1.1) rotate(2deg);
+}
+
+/* Dashboard Cards Animación */
+.card {
+    transition: all 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+}
+
+/* Navbar adjustments */
+.navbar {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    backdrop-filter: blur(14px);
+}
+
+.navbar-brand {
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+}
+
+.navbar-logo {
+    height: 48px;
+    width: 64px;
+    object-fit: contain;
+    padding: 4px 6px;
+    background: rgba(255,250,249,0.96);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 10px;
+    box-shadow: 0 5px 16px rgba(33,20,17,0.18);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar-brand:hover .navbar-logo {
+    transform: translateY(-2px) rotate(-2deg);
+    box-shadow: 0 8px 20px rgba(33,20,17,0.28);
+}
+
+.navbar .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    border-radius: 999px;
+    margin: 0 0.15rem;
+}
+
+.navbar .nav-link:hover {
+    color: #fff !important;
+    background: rgba(255,255,255,0.1);
+}
+
+/* Hero Section con Fondo local Fondo.png */
+.hero-section {
+    min-height: 100vh;
+    padding-top: 100px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(245, 236, 234, 0.86) 0%, rgba(238, 227, 224, 0.82) 38%, rgba(191, 159, 150, 0.28) 100%),
+                url('Fondo.png') center/cover no-repeat;
+}
+
+.hero-content {
+    z-index: 2;
+    position: relative;
+}
+
+.hero-content h1 {
+    letter-spacing: -1px;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.hero-content p {
+    text-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    font-size: 1.15rem;
+    opacity: 0.95;
+}
+
+.hero-image-wrapper {
+    height: 420px;
+    background: transparent;
+    border: none;
+    border-radius: 1.25rem;
+    transform: perspective(1000px) rotateY(-8deg) rotateX(5deg);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+.hero-image-wrapper:hover {
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+}
+
+.hero-image-wrapper img {
+    mix-blend-mode: multiply;
+}
+
+.mockup-placeholder {
+    height: 100%;
+    width: 100%;
+    color: rgba(255,255,255,0.7) !important;
+    flex-direction: column;
+}
+
+.mockup-placeholder i {
+    color: var(--primary-light);
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Feature Cards */
+.features-section {
+    position: relative;
+    background: linear-gradient(180deg, #fffaf8 0%, #fef2ee 100%) !important;
+    padding-top: 7rem !important;
+}
+
+.beneficios-section {
+    padding-top: 7rem !important;
+    background: linear-gradient(180deg, #fff7f4 0%, #fdf0ea 100%) !important;
+}
+
+.features-section h2,
+.features-section h4 {
+    color: #503A33 !important;
+}
+
+.features-section p.text-muted,
+.features-section p {
+    color: #6B4A40 !important;
+    opacity: 1 !important;
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(201, 146, 151, 0.16) !important;
+    box-shadow: 0 10px 24px rgba(76, 60, 56, 0.06);
+}
+
+.feature-card h4 {
+    color: #503A33 !important;
+}
+
+.feature-card p {
+    color: #6B4A40 !important;
+    opacity: 1 !important;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 18px 34px rgba(76, 60, 56, 0.1) !important;
+}
+
+.feature-icon {
+    width: 65px;
+    height: 65px;
+}
+
+.pos-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    filter: grayscale(0.25);
+}
+
+/* Footer */
+footer {
+    background: linear-gradient(135deg, #6C514C 0%, #4E3B37 100%) !important;
+    border-top: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+footer .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+    opacity: 1 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .hero-section {
+        padding-top: 120px;
+        padding-bottom: 60px;
+    }
+    
+    .hero-image-wrapper {
+        margin-top: 3rem;
+        height: 320px;
+        transform: none;
+    }
+    
+    .hero-image-wrapper:hover {
+        transform: none;
+    }
+}
+
+/* ===== CLASES FALTANTES CORREGIDAS ===== */
+
+/* btn-primary-custom: igual que btn-primary pero con clase propia */
+.btn-primary-custom {
+    background-color: #B87983 !important;
+    border-color: #B87983 !important;
+    color: #fff !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 10px rgba(184, 121, 131, 0.3);
+}
+.btn-primary-custom:hover {
+    background-color: #9E626D !important;
+    border-color: #9E626D !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(184, 121, 131, 0.45);
+}
+
+/* bg-primary-custom */
+.bg-primary-custom {
+    background-color: #B87983 !important;
+}
+
+/* bg-primary-light */
+.bg-primary-light {
+    background-color: #F3DDE1 !important;
+}
+
+/* Componentes compartidos del panel */
+.card {
+    border-color: rgba(80, 58, 51, 0.08) !important;
+}
+
+.table thead th {
+    color: #6B504A;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #C9828D;
+    box-shadow: 0 0 0 0.2rem rgba(201, 130, 141, 0.2);
+}
