@@ -128,15 +128,15 @@ function colorTipoMovimiento($tipo) {
                             <tbody>
                                 <?php if (count($productos) > 0): ?>
                                     <?php foreach ($productos as $p): ?>
-                                        <?php $esBajoStock = ($p['stock'] <= $p['stock_minimo']); ?>
+                                        <?php $esBajoStock = ($p['stock'] <= $p['stok']); ?>
                                         <tr class="<?php echo $esBajoStock ? 'table-danger' : ''; ?>">
-                                            <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
-                                            <td><?php echo htmlspecialchars($p['nombre']); ?></td>
-                                            <td><?php echo htmlspecialchars($p['color']); ?></td>
-                                            <td class="text-end">$<?php echo number_format($p['precio_compra'], 2); ?></td>
-                                            <td class="text-end fw-semibold">$<?php echo number_format($p['precio_compra'] * $p['stock'], 2); ?></td>
+                                            <td class="fw-bold"><?php echo htmlspecialchars($p['ref']); ?></td>
+                                            <td><?php echo htmlspecialchars($p['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($p['colores']); ?></td>
+                                            <td class="text-end">$<?php echo number_format($p['precio'], 2); ?></td>
+                                            <td class="text-end fw-semibold">$<?php echo number_format($p['valor'] * $p['stock'], 2); ?></td>
                                             <td class="text-center">
-                                                <span class="fs-6 fw-bold"><?php echo $p['stock']; ?></span>
+                                                <span class="fs-6 fw-bold"><?php echo $p['stockes']; ?></span>
                                             </td>
                                             <td class="text-center">
                                                 <?php if ($esBajoStock): ?>
