@@ -3,8 +3,8 @@
         <a href="gproductos.php" class="text-decoration-none d-flex align-items-center justify-content-start gap-3" style="width: 100%; height: 100%;">
             <img src="../../public/img/logo_bella.png" alt="Logo Bella Tela" class="brand-logo-anim" style="height: 55px; width: auto; flex-shrink: 0;">
             <div class="d-flex flex-column justify-content-center text-center mt-1" style="line-height: 1;">
-                <span style="color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px;">Bella</span>
-                <span style="color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 300; letter-spacing: 8px; margin-left: 8px;">TELA</span>
+                <span style="color: var(--color-menu-texto); font-family: inherit; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px;">Bella</span>
+                <span style="color: var(--color-menu-texto); font-family: inherit; font-size: 0.8rem; font-weight: 300; letter-spacing: 8px; margin-left: 8px;">TELA</span>
             </div>
         </a>
     </div>
@@ -87,7 +87,7 @@
                 <h6 class="text-white mb-0 fw-bold text-truncate" style="font-size: 0.85rem;"><?php echo $_SESSION['usuario_nombre'] ?? 'Administrador'; ?></h6>
                 <span class="text-white-50 d-block text-truncate" style="font-size: 0.7rem;"><i class="fa-solid fa-circle text-success" style="font-size: 0.5rem; vertical-align: middle; margin-right: 3px;"></i>En línea</span>
             </div>
-            <a href="../../controllers/auth/AuthController.php?accion=logout" class="btn btn-sm border-0 p-1 rounded-circle d-flex align-items-center justify-content-center text-white-50" title="Cerrar Sesión" style="width: 28px; height: 28px; transition: color 0.2s;" onmouseover="this.classList.replace('text-white-50', 'text-danger')" onmouseout="this.classList.replace('text-danger', 'text-white-50')">
+            <a href="../../controllers/auth/AuthController.php?accion=logout" class="btn btn-sm border-0 p-1 rounded-circle d-flex align-items-center justify-content-center text-white-50 logout-sidebar-link" title="Cerrar Sesión" style="width: 28px; height: 28px; transition: color 0.2s;">
                 <i class="fa-solid fa-power-off"></i>
             </a>
         </div>

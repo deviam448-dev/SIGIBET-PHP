@@ -51,7 +51,7 @@ class VentaController
         
         // Filtrar productos que tengan stock > 0
         $disponibles = array_filter($todos, function($p) {
-            return (int)$p['stock'] > 0;
+            return (int)$p['estado'] === 1 && (int)$p['stock'] > 0;
         });
 
         if (!empty(trim($busqueda))) {
@@ -112,10 +112,9 @@ class VentaController
         $total = $subtotal + $iva;
         
         $metodoPago = $input['metodo_pago'] ?? 'Efectivo';
-        $clienteId = !empty($input['cliente_id']) ? (int)$input['cliente_id'] : null;
         $usuarioId = (int)$_SESSION['usuario']['id_usuario'];
 
-        $resultado = $this->modeloVenta->registrarVentaCompleta($usuarioId, $carrito, $subtotal, $total, $metodoPago, $clienteId);
+        $resultado = $this->modeloVenta->registrarVentaCompleta($usuarioId, $carrito, $subtotal, $total, $metodoPago);
 
         echo json_encode($resultado);
         exit;

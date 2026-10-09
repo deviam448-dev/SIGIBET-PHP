@@ -4,6 +4,10 @@ require_once __DIR__ . '/../Layoust/header.php';
 require_once __DIR__ . '/../../controllers/auth/productocontroller.php';
 
 $productoController = new ProductoController();
+$esAdmin = AuthController::esAdmin();
+if ($esAdmin && !isset($_SESSION['csrf_archivar_producto'])) {
+    $_SESSION['csrf_archivar_producto'] = bin2hex(random_bytes(32));
+}
 
 function obtenerImagenReferencia(string $categoria = '', string $nombre = ''): string
 {
@@ -127,7 +131,11 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                                         <th>Ref.</th>
                                         <th>Nombre</th>
                                         <th>Color</th>
+                                        <th>Precio Compra</th>
                                         <th>Precio Venta</th>
+                                        <?php if ($esAdmin): ?>
+                                            <th>Ganancia / Margen</th>
+                                        <?php endif; ?>
                                         <th>Stock</th>
                                         <th>Estado</th>
                                         <th class="text-center">Acciones</th>
@@ -135,7 +143,7 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                                 </thead>
                                 <tbody>
                                     <?php foreach ($items as $p): ?>
-                                        <?php $imagenProducto = obtenerImagenReferencia($p['categoria'] ?? '', $p['nombre'] ?? ''); ?>
+                                        <?php $imagenProducto = !empty($p['imagen']) ? '../../public/img/' . $p['imagen'] : obtenerImagenReferencia($p['categoria'] ?? '', $p['nombre'] ?? ''); ?>
                                         <tr>
                                             <td class="text-center">
                                                 <img src="<?php echo htmlspecialchars($imagenProducto); ?>"
@@ -152,7 +160,22 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                                             <td>
                                                 <span class="badge bg-light text-dark border"><i class="fa-solid fa-palette me-1"></i><?php echo htmlspecialchars($p['color']); ?></span>
                                             </td>
+                                            <td class="text-muted fw-semibold">$<?php echo number_format((float)$p['precio_compra'], 2); ?></td>
                                             <td class="text-success fw-semibold">$<?php echo number_format($p['precio'], 2); ?></td>
+                                            <?php if ($esAdmin): ?>
+                                                <?php
+                                                    $gananciaUnitaria = (float)$p['precio'] - (float)$p['precio_compra'];
+                                                    $margenGanancia = (float)$p['precio'] > 0
+                                                        ? ($gananciaUnitaria / (float)$p['precio']) * 100
+                                                        : 0;
+                                                ?>
+                                                <td>
+                                                    <span class="fw-bold <?php echo $gananciaUnitaria >= 0 ? 'text-success' : 'text-danger'; ?>">
+                                                        $<?php echo number_format($gananciaUnitaria, 2); ?>
+                                                    </span>
+                                                    <small class="d-block text-muted"><?php echo number_format($margenGanancia, 2); ?>% margen</small>
+                                                </td>
+                                            <?php endif; ?>
                                             <td>
                                                 <?php if ($p['stock'] <= $p['stock_minimo']): ?>
                                                     <span class="badge bg-danger rounded-pill"><?php echo $p['stock']; ?> (Bajo)</span>
@@ -169,15 +192,26 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-info" title="Cambiar imagen"
+                                                        onclick='abrirModalEditar(<?php echo json_encode($p); ?>)'>
+                                                        <i class="fa-solid fa-camera"></i>
+                                                    </button>
                                                     <button type="button" class="btn btn-sm btn-outline-primary" title="Modificar"
                                                         onclick='abrirModalEditar(<?php echo json_encode($p); ?>)'>
                                                         <i class="fa-solid fa-pen-to-square"></i>
                                                     </button>
-                                                    <a href="../../controllers/auth/productocontroller.php?accion=eliminar&id=<?php echo $p['id']; ?>" 
-                                                       class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar"
-                                                       data-stock="<?php echo $p['stock']; ?>">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </a>
+                                                    <?php if ($esAdmin && (int)$p['estado'] === 1): ?>
+                                                        <form action="../../controllers/auth/productocontroller.php?accion=archivar"
+                                                              method="POST" class="d-inline form-archivar-producto">
+                                                            <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                                                            <input type="hidden" name="csrf_token"
+                                                                   value="<?php echo htmlspecialchars($_SESSION['csrf_archivar_producto'], ENT_QUOTES, 'UTF-8'); ?>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger btn-archivar"
+                                                                    title="Archivar producto" aria-label="Archivar <?php echo htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8'); ?>">
+                                                                <i class="fa-solid fa-box-archive"></i>
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -220,7 +254,7 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                 <h5 class="modal-title" id="modalNuevoProductoLabel"><i class="fa-solid fa-plus me-2"></i>Registrar Nueva Tela</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="../../controllers/auth/productocontroller.php?accion=guardar" method="POST">
+            <form action="../../controllers/auth/productocontroller.php?accion=guardar" method="POST" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -265,6 +299,11 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                         </div>
                         
                         <div class="col-12">
+                            <label class="form-label">Imagen del producto</label>
+                            <input type="file" name="imagen" class="form-control" accept="image/jpeg,image/png,image/webp">
+                            <small class="text-muted">JPG, PNG o WEBP, máximo 5 MB.</small>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label">Descripción</label>
                             <textarea name="descripcion" class="form-control" rows="2" placeholder="Detalles de la tela..."></textarea>
                         </div>
@@ -287,7 +326,7 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                 <h5 class="modal-title" id="modalEditarProductoLabel"><i class="fa-solid fa-pen-to-square me-2"></i>Modificar Tela</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="../../controllers/auth/productocontroller.php?accion=actualizar" method="POST">
+            <form action="../../controllers/auth/productocontroller.php?accion=actualizar" method="POST" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" name="id_producto" id="edit_id">
                     
@@ -337,6 +376,15 @@ ksort($productosPorCategoria, SORT_NATURAL | SORT_FLAG_CASE);
                         </div>
                         
                         <div class="col-12">
+                            <label class="form-label">Cambiar imagen</label>
+                            <input type="file" name="imagen" class="form-control" accept="image/jpeg,image/png,image/webp">
+                            <small class="text-muted">Selecciona una nueva imagen para reemplazar la actual.</small>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="eliminar_imagen" id="edit_eliminar_imagen">
+                                <label class="form-check-label" for="edit_eliminar_imagen">Eliminar imagen personalizada</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label">Descripción</label>
                             <textarea name="descripcion" id="edit_descripcion" class="form-control" rows="2"></textarea>
                         </div>
@@ -364,6 +412,7 @@ function abrirModalEditar(producto) {
     document.getElementById('edit_stock').value = producto.stock;
     document.getElementById('edit_estado').value = producto.estado;
     document.getElementById('edit_descripcion').value = producto.descripcion;
+    document.getElementById('edit_eliminar_imagen').checked = false;
     
     var modal = new bootstrap.Modal(document.getElementById('modalEditarProducto'));
     modal.show();
@@ -402,37 +451,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Confirmación de eliminación con validación de stock frontend
-    const btnEliminar = document.querySelectorAll('.btn-eliminar');
-    btnEliminar.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const stock = parseInt(this.getAttribute('data-stock'));
-            const href = this.getAttribute('href');
-
-            if (stock > 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Acción Denegada',
-                    text: 'No se puede eliminar un producto que aún tiene stock disponible (' + stock + ' uds).',
-                    confirmButtonColor: '#b56576'
-                });
-            } else {
-                Swal.fire({
-                    title: '¿Estás seguro?',
-                    text: "Esta acción no se puede deshacer.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sí, eliminar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = href;
-                    }
-                });
-            }
+    document.querySelectorAll('.form-archivar-producto').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: '¿Archivar producto?',
+                text: 'Se ocultará del catálogo público, pero conservará su stock y el historial de ventas.',
+                showCancelButton: true,
+                confirmButtonColor: '#A85F6D',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, archivar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    HTMLFormElement.prototype.submit.call(form);
+                }
+            });
         });
     });
 });
@@ -442,4 +477,3 @@ document.addEventListener('DOMContentLoaded', function() {
 // Incluir el footer (que cierra las etiquetas <main>, <div> y <body> abiertas en el header)
 require_once __DIR__ . '/../Layoust/footer.php';
 ?>
-

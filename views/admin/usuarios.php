@@ -96,9 +96,11 @@ require_once __DIR__ . '/../Layoust/header.php';
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header text-white rounded-top-4 border-0" style="background: linear-gradient(135deg, var(--bs-primary), #2C87B8);">
+            <div class="modal-header rounded-top-4 border-0" style="background: var(--color-menu); color: var(--color-menu-texto); border-bottom: 3px solid var(--color-acento) !important;">
                 <h5 class="modal-title fw-bold" id="modalUsuarioTitulo">Nuevo Usuario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn border-0 p-0" data-bs-dismiss="modal" aria-label="Cerrar" style="color: var(--color-menu-texto); background: transparent; font-size: 1.5rem; line-height: 1;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <form id="form-usuario">
                 <div class="modal-body p-4">
@@ -148,7 +150,7 @@ require_once __DIR__ . '/../Layoust/header.php';
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary fw-bold px-4" id="btn-guardar-usr">Guardar Usuario</button>
                 </div>
             </form>
@@ -280,6 +282,7 @@ function guardarUsuario() {
     const form = document.getElementById('form-usuario');
     const formData = new FormData(form);
     const btn = document.getElementById('btn-guardar-usr');
+    const colorBotones = getComputedStyle(document.documentElement).getPropertyValue('--color-botones').trim() || '#A85F6D';
     
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
@@ -295,7 +298,7 @@ function guardarUsuario() {
                 icon: 'success',
                 title: '¡Registro exitoso!',
                 text: data.mensaje,
-                confirmButtonColor: '#B87983'
+                confirmButtonColor: colorBotones
             });
             modalForm.hide();
             cargarUsuarios();
@@ -309,7 +312,7 @@ function guardarUsuario() {
                 footer: esLimite
                     ? '<small>Desactiva un usuario del mismo rol antes de registrar uno nuevo.</small>'
                     : '',
-                confirmButtonColor: '#B87983'
+                confirmButtonColor: colorBotones
             });
         }
     })
@@ -354,4 +357,3 @@ function cambiarEstado(id, activo) {
 </script>
 
 <?php require_once __DIR__ . '/../Layoust/footer.php'; ?>
-

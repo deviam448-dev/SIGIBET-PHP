@@ -3,9 +3,10 @@ session_start();
 require_once __DIR__ . '/../../models/Configuracion.php';
 
 $configuracion = (new Configuracion())->obtenerConfiguracion();
-    $colorPrimario = $configuracion['tema_colores'] ?? '#B87983';
+$colorPrimario = $configuracion['color_botones'];
 $colorPrimarioRgb = sscanf(ltrim($colorPrimario, '#'), '%02x%02x%02x');
 $colorPrimarioRgb = implode(', ', $colorPrimarioRgb ?: [185, 111, 97]);
+$tipografia = htmlspecialchars($configuracion['tipografia'], ENT_QUOTES, 'UTF-8');
 
 // Si el usuario ya tiene sesión iniciada, redirigir al dashboard/panel correspondiente
 if (isset($_SESSION['usuario'])) {
@@ -30,84 +31,160 @@ if (isset($_SESSION['usuario'])) {
     <style>
         :root {
             --primary-color: <?php echo htmlspecialchars($colorPrimario, ENT_QUOTES, 'UTF-8'); ?>;
-            --primary-hover: #9E626D;
-            --dark-bg: #503A33;
-            --text-main: #3D2B28;
+            --primary-hover: <?php echo htmlspecialchars($colorPrimario, ENT_QUOTES, 'UTF-8'); ?>;
+            --primary-cta: #B9974E;
+            --dark-bg: #1C191B;
+            --text-main: #292528;
+            --text-soft: #70696D;
+            --surface: #FAF8F8;
+            --surface-strong: #F5E9EB;
             --primary-rgb: <?php echo htmlspecialchars($colorPrimarioRgb, ENT_QUOTES, 'UTF-8'); ?>;
         }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, rgba(57, 40, 35, 0.78) 0%, rgba(80, 58, 51, 0.48) 100%),
+            font-family: <?php echo $tipografia; ?>;
+            background: linear-gradient(90deg, rgba(28, 25, 27, 0.42) 0%, rgba(28, 25, 27, 0.2) 100%),
                         url('../../public/img/Fondo.png') center/cover no-repeat fixed;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
+            padding: 24px 16px;
             color: var(--text-main);
         }
+        button:hover, .btn:hover { filter: brightness(0.88); }
         .login-card {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(28, 25, 27, 0.28);
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.74);
             width: 100%;
-            max-width: 450px;
+            max-width: 520px;
         }
         .login-header {
-            background: var(--dark-bg);
+            position: relative;
+            background: linear-gradient(135deg, #1C191B 0%, #39272E 100%);
             color: white;
-            padding: 2rem 1.5rem;
+            padding: 1.35rem 1.5rem 1.55rem;
             text-align: center;
+            border-bottom: 3px solid var(--primary-cta);
+        }
+        .login-header .brand-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 0.45rem;
+        }
+        .login-header .brand-box {
+            width: 108px;
+            height: 116px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .login-header img {
-            max-height: 90px;
+            width: 100%;
+            max-height: 116px;
             object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
         }
-        .login-header h2 {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
+        .login-header p {
+            font-size: 1.16rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            margin: 0;
+            color: rgba(255,255,255,0.92);
         }
-        .login-header h2 span {
-            color: #E1A1AA;
+        .login-subtitle {
+            margin: 0.35rem 0 0;
+            color: rgba(255,255,255,0.68);
+            font-size: 0.82rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
         }
         .login-body {
-            padding: 2.5rem;
+            padding: 1.8rem 1.6rem 1.45rem;
+            background: rgba(255,255,255,0.98);
+        }
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        .form-floating > .form-control {
+            background: #FFFFFF;
+            border: 1px solid rgba(41, 37, 40, 0.16);
+            border-radius: 10px;
+            height: 68px;
+            padding: 1.45rem 0.95rem 0.55rem;
+            color: var(--text-main);
+            font-size: 0.98rem;
+            font-weight: 500;
+            box-shadow: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .form-floating > label {
-            color: #6c757d;
-        }
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(201, 130, 141, 0.25);
-        }
-        .btn-login {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            padding: 0.8rem;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        .btn-login:hover {
-            background-color: var(--primary-hover);
-            border-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.4);
-        }
-        .back-link {
-            text-decoration: none;
-            color: var(--primary-color);
+            color: var(--text-soft);
+            padding: 1rem 0.95rem;
             font-size: 0.9rem;
             font-weight: 500;
         }
+        .form-floating > .form-control:focus,
+        .form-floating > .form-control:not(:placeholder-shown) {
+            padding-top: 1.55rem;
+            padding-bottom: 0.45rem;
+        }
+        .form-control:focus {
+            border-color: #A85F6D;
+            box-shadow: 0 0 0 0.22rem rgba(168, 95, 109, 0.14);
+            background: #FFFFFF;
+        }
+        .form-floating > .form-control:-webkit-autofill,
+        .form-floating > .form-control:-webkit-autofill:hover,
+        .form-floating > .form-control:-webkit-autofill:focus {
+            -webkit-text-fill-color: #292528;
+            caret-color: #292528;
+            -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset;
+            box-shadow: 0 0 0 1000px #FFFFFF inset;
+            transition: background-color 9999s ease-out 0s;
+        }
+        .btn-login {
+            background: #A85F6D;
+            border: none;
+            color: #FFFFFF;
+            padding: 0.92rem 1rem;
+            font-weight: 600;
+            border-radius: 9px;
+            font-size: 0.98rem;
+            letter-spacing: 0.01em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        .btn-login:hover {
+            background: #854653;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
+        }
+        .back-link {
+            text-decoration: none;
+            color: #854653;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
         .back-link:hover {
-            color: var(--primary-hover);
+            color: #683944;
             text-decoration: underline;
+        }
+        @media (max-width: 576px) {
+            .login-card {
+                max-width: 92vw;
+            }
+            .login-body {
+                padding: 1.2rem 1rem 1.2rem;
+            }
+            body {
+                padding: 14px 10px;
+            }
         }
     </style>
 </head>
@@ -115,8 +192,13 @@ if (isset($_SESSION['usuario'])) {
 
     <div class="login-card">
         <div class="login-header">
-            <img src="../../public/img/logoprincipal.png" alt="Bella Tela" class="mb-2">
-            <p class="mb-0 fw-light text-white-50">Acceso al Sistema</p>
+            <div class="brand-wrap">
+                <div class="brand-box">
+                    <img src="../../public/img/logoprincipal-transparente.png?v=20261008-2" alt="Bella Tela">
+                </div>
+            </div>
+            <p class="mb-0">Acceso al Sistema</p>
+            <div class="login-subtitle">Bella Tela · SIGIBET</div>
         </div>
         <div class="login-body">
             <form action="../../controllers/auth/AuthController.php?accion=login" method="POST">

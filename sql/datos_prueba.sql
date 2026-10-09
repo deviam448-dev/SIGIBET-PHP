@@ -17,8 +17,8 @@ INSERT IGNORE INTO usuarios (nombre, usuario, email, telefono, password, rol_id,
 -- CONFIGURACIÓN DE LA EMPRESA
 -- --------------------------------------------------------
 INSERT INTO configuracion (id, nombre_empresa, nit, telefono, email, direccion, impuesto, tipo_facturacion)
-VALUES (1, 'Bella Tela', '900.123.456-7', '+57 311 555 0100', 'info@bellatela.com',
-        'Calle 15 # 8-42, Campoalegre, Huila', 0.00, 'Régimen Simplificado')
+VALUES (1, 'Bella Tela', '900.123.456-7', '+57 321 408 8690', 'info@bellatela.com',
+        'Algeciras, Huila', 19.00, 'Régimen Simplificado')
 ON DUPLICATE KEY UPDATE
     nombre_empresa   = VALUES(nombre_empresa),
     nit              = VALUES(nit),
@@ -75,21 +75,8 @@ INSERT IGNORE INTO productos (referencia, nombre, color, categoria, descripcion,
 ('IN-003', 'Tela Drill Uniformes', 'Verde Militar', 'Industrial', 'Drill de algodón resistente al desgaste, ideal para uniformes industriales y pantalones de trabajo.', 11000.00,  6000.00, 180, 30, 1);
 
 -- --------------------------------------------------------
--- CLIENTES
--- --------------------------------------------------------
-INSERT IGNORE INTO clientes (nombre, documento, telefono, email, direccion) VALUES
-('Ana Sofía Medina',          '1075890123', '3114567890', 'ana.medina@email.com',   'Cra 5 # 12-34, Campoalegre, Huila'),
-('Costurería El Hilo',        '901234567',  '3125678901', 'elhilo@costureria.com',  'Calle 8 # 4-20, Neiva, Huila'),
-('Modas Valentina',           '1082345678', '3136789012', 'valentina@modas.com',    'Cra 10 # 7-15, Pitalito, Huila'),
-('Daniela Torres Ruiz',       '1079456789', '3147890123', 'dtorres@gmail.com',      'Calle 3 # 9-08, Garzón, Huila'),
-('Taller Confección Luisa',   '800987654',  '3158901234', 'luisa@taller.com',       'Av. 15 # 22-40, Neiva, Huila'),
-('Sandra Milena Rojas',       '1073567890', '3169012345', 'srojas@hotmail.com',     'Cra 7 # 18-22, Campoalegre, Huila'),
-('Boutique Estilo HN',        '900876543',  '3170123456', 'estilo@boutique.com',    'Calle 20 # 5-18, Neiva, Huila'),
-('Rosa Elena Perdomo',        '1071678901', '3181234567', 'rperdomo@gmail.com',     'Cra 3 # 6-44, La Plata, Huila');
-
--- --------------------------------------------------------
 -- 100 CLIENTES Y COMPRAS DE PRUEBA
--- Cada cliente recibe una factura en una fecha diferente.
+-- Cada compra recibe un cliente anónimo con ID autoincremental.
 -- Cada compra contiene una tela y un insumo de costura.
 -- --------------------------------------------------------
 
@@ -106,21 +93,34 @@ VALUES
     ('IC-007', 'Cinta Elastica', 'Blanco', 'Insumos de Costura', 'Cinta elastica para ropa interior y deportiva.', 2200.00, 1100.00, 200, 20, 1),
     ('IC-008', 'Aguja para Maquina', 'Metal', 'Insumos de Costura', 'Aguja universal para maquina de coser.', 1800.00, 900.00, 180, 20, 1);
 
--- Clientes numerados para que el bloque sea reproducible y no duplique datos.
-INSERT IGNORE INTO clientes
-    (nombre, documento, telefono, email, direccion, fecha_creacion)
+-- Cada compra de prueba recibe un cliente anónimo con ID autoincremental.
+INSERT INTO clientes (nombre, documento, fecha_creacion)
 WITH RECURSIVE numeros AS (
     SELECT 1 AS numero
     UNION ALL
     SELECT numero + 1 FROM numeros WHERE numero < 100
 )
 SELECT
-    CONCAT('Cliente de Prueba ', LPAD(numero, 3, '0')),
-    CONCAT('CC-PRUEBA-', LPAD(numero, 3, '0')),
-    CONCAT('320555', LPAD(numero, 4, '0')),
-    CONCAT('cliente.prueba.', LPAD(numero, 3, '0'), '@example.com'),
-    CONCAT('Calle ', 10 + MOD(numero, 80), ' # ', 5 + MOD(numero, 40), '-', LPAD(numero, 2, '0'), ', Neiva'),
+    NULL,
+    NULL,
     DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL (numero - 1) DAY)
+FROM numeros;
+
+SET @primer_cliente_prueba = LAST_INSERT_ID();
+
+DROP TEMPORARY TABLE IF EXISTS tmp_clientes_prueba;
+CREATE TEMPORARY TABLE tmp_clientes_prueba (
+    numero INT PRIMARY KEY,
+    cliente_id INT NOT NULL
+);
+
+INSERT INTO tmp_clientes_prueba (numero, cliente_id)
+WITH RECURSIVE numeros AS (
+    SELECT 1 AS numero
+    UNION ALL
+    SELECT numero + 1 FROM numeros WHERE numero < 100
+)
+SELECT numero, @primer_cliente_prueba + numero - 1
 FROM numeros;
 
 SET @usuario_prueba = (SELECT id FROM usuarios WHERE usuario = 'vendedora1' LIMIT 1);
@@ -128,7 +128,7 @@ SET @usuario_prueba = (SELECT id FROM usuarios WHERE usuario = 'vendedora1' LIMI
 DROP TEMPORARY TABLE IF EXISTS tmp_compras_prueba;
 CREATE TEMPORARY TABLE tmp_compras_prueba AS
 SELECT
-    c.id AS cliente_id,
+    c.cliente_id,
     n.numero,
     DATE_SUB(CURRENT_DATE(), INTERVAL (n.numero - 1) DAY)
         + INTERVAL (10 + MOD(n.numero, 8)) HOUR AS fecha,
@@ -175,7 +175,7 @@ FROM (
     UNION ALL SELECT 91 UNION ALL SELECT 92 UNION ALL SELECT 93 UNION ALL SELECT 94 UNION ALL SELECT 95
     UNION ALL SELECT 96 UNION ALL SELECT 97 UNION ALL SELECT 98 UNION ALL SELECT 99 UNION ALL SELECT 100
 ) n
-JOIN clientes c ON c.documento = CONCAT('CC-PRUEBA-', LPAD(n.numero, 3, '0'));
+JOIN tmp_clientes_prueba c ON c.numero = n.numero;
 
 INSERT IGNORE INTO ventas
     (codigo_factura, usuario_id, cliente_id, subtotal, total, metodo_pago, fecha)
@@ -217,3 +217,4 @@ JOIN ventas v ON v.codigo_factura = CONCAT('PRUEBA-', LPAD(t.numero, 3, '0'))
 JOIN productos p ON p.referencia = t.insumo_ref;
 
 DROP TEMPORARY TABLE IF EXISTS tmp_compras_prueba;
+DROP TEMPORARY TABLE IF EXISTS tmp_clientes_prueba;

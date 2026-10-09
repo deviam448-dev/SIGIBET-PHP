@@ -57,7 +57,10 @@ class ConfiguracionController
             'direccion' => trim($_POST['direccion'] ?? ''),
             'impuesto' => (float)($_POST['impuesto'] ?? 0),
             'tipo_facturacion' => trim($_POST['tipo_facturacion'] ?? 'Régimen Simplificado'),
-            'tema_colores' => trim($_POST['tema_colores'] ?? '#B87983')
+            'color_botones' => trim($_POST['color_botones'] ?? '#A85F6D'),
+            'color_menu' => trim($_POST['color_menu'] ?? '#1C191B'),
+            'color_acento' => trim($_POST['color_acento'] ?? '#B9BF66'),
+            'tipografia' => trim($_POST['tipografia'] ?? 'Inter')
         ];
 
         if (empty($datos['nombre_empresa'])) {
@@ -68,9 +71,40 @@ class ConfiguracionController
         $resultado = $this->modelo->actualizar($datos);
         
         if ($resultado['success']) {
-            Auditoria::registrar('Configuración', 'Actualizar Ajustes', "Empresa: " . $datos['nombre_empresa'] . " | IVA: " . $datos['impuesto'] . "%");
-            // Guardar color en sesión para que el cambio visual sea instantáneo si es necesario
-            $_SESSION['tema_colores'] = $datos['tema_colores'];
+            Auditoria::registrar(
+                'Configuración',
+                'Actualizar Ajustes',
+                "Empresa: " . $datos['nombre_empresa'] . " | IVA: " . $datos['impuesto'] .
+                "% | Tipografía: " . $datos['tipografia']
+            );
+            $_SESSION['tema_colores'] = $datos['color_botones'];
+        }
+
+        echo json_encode($resultado);
+        exit;
+    }
+
+    public function guardarAparienciaAjax()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'mensaje' => 'Método no permitido.']);
+            exit;
+        }
+
+        $resultado = $this->modelo->actualizarApariencia([
+            'color_botones' => $_POST['color_botones'] ?? '',
+            'color_menu' => $_POST['color_menu'] ?? '',
+            'color_acento' => $_POST['color_acento'] ?? '',
+            'tipografia' => $_POST['tipografia'] ?? ''
+        ]);
+
+        if ($resultado['success']) {
+            $_SESSION['tema_colores'] = strtoupper(trim($_POST['color_botones']));
+            Auditoria::registrar('Configuración', 'Actualizar Apariencia', 'Colores y tipografía');
+        } else {
+            http_response_code(400);
         }
 
         echo json_encode($resultado);
@@ -90,9 +124,11 @@ if (basename($_SERVER['PHP_SELF']) === 'ConfiguracionController.php') {
         case 'guardarAjax':
             $controller->guardarAjax();
             break;
+        case 'guardarAparienciaAjax':
+            $controller->guardarAparienciaAjax();
+            break;
         default:
             echo json_encode(['success' => false, 'mensaje' => 'Acción no válida.']);
             exit;
     }
 }
-

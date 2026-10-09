@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/GmailMailer.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 
 class AuthController
@@ -392,25 +393,52 @@ class AuthController
 
     public function solicitarRecuperacion(): void
     {
-        $identificador = trim($_POST['identificador'] ?? '');
-        $usuarioModel = new Usuario();
-        $token = $identificador !== '' ? $usuarioModel->crearTokenRecuperacion($identificador) : null;
+        $email = trim($_POST['email'] ?? '');
+        $redirect = '../../views/Auth/recuperar.php';
 
-        if ($token) {
-            $url = 'http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
-                . dirname($_SERVER['PHP_SELF']) . '/../../views/Auth/restablecer.php?token=' . urlencode($token);
-            $usuario = $usuarioModel->obtenerPorEmail($identificador);
-            $asunto = 'Recuperación de contraseña - Bella Tela';
-            $mensaje = "Solicitaste cambiar tu contraseña. Abre este enlace antes de 30 minutos:\n\n$url";
-            @mail($usuario['email'], $asunto, $mensaje, 'Content-Type: text/plain; charset=UTF-8');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['recovery_feedback'] = [
+                'type' => 'error',
+                'message' => 'Escribe una dirección de correo electrónico válida.'
+            ];
+            header('Location: ' . $redirect);
+            exit;
         }
 
-        $_SESSION['alert'] = [
-            'icon' => 'info',
-            'title' => 'Solicitud recibida',
-            'text' => 'Si los datos corresponden a una cuenta activa, recibirás instrucciones de recuperación.'
+        $usuarioModel = new Usuario();
+        $token = $usuarioModel->crearTokenRecuperacion($email);
+
+        if ($token !== null) {
+            $usuario = $usuarioModel->obtenerPorEmail($email);
+            try {
+                if (!$usuario || empty($usuario['email'])) {
+                    throw new RuntimeException('No se encontró una dirección de correo para la cuenta.');
+                }
+                GmailMailer::enviarRecuperacion($usuario['email'], $token);
+            } catch (RuntimeException $exception) {
+                $usuarioModel->invalidarTokenRecuperacion($token);
+                $cause = $exception->getPrevious();
+                error_log(
+                    'Error al enviar recuperación de contraseña: ' . $exception->getMessage()
+                    . ($cause ? ' Detalle SMTP: ' . $cause->getMessage() : '')
+                );
+                $feedbackMessage = str_contains($exception->getMessage(), 'Falta configurar la contraseña de aplicación')
+                    ? 'Falta configurar una contraseña de aplicación de Gmail en config/mail.local.php. La contraseña normal de Gmail no funciona para SMTP.'
+                    : 'No se pudo enviar el correo de recuperación. Revisa config/mail.local.php y el registro de errores de PHP.';
+                $_SESSION['recovery_feedback'] = [
+                    'type' => 'error',
+                    'message' => $feedbackMessage
+                ];
+                header('Location: ' . $redirect);
+                exit;
+            }
+        }
+
+        $_SESSION['recovery_feedback'] = [
+            'type' => 'success',
+            'message' => 'Si el correo está asociado a una cuenta activa, recibirás un enlace para restablecer la contraseña.'
         ];
-        header('Location: ../../views/Auth/login.php');
+        header('Location: ' . $redirect);
         exit;
     }
 

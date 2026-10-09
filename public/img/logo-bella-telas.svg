@@ -1,0 +1,26 @@
+<svg width="560" height="180" viewBox="0 0 560 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fabricBg" x1="20" y1="18" x2="120" y2="130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6E8DF"/>
+      <stop offset="1" stop-color="#E1B89E"/>
+    </linearGradient>
+    <linearGradient id="fabricRoll" x1="36" y1="40" x2="118" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B97A5D"/>
+      <stop offset="1" stop-color="#78523D"/>
+    </linearGradient>
+  </defs>
+
+  <g>
+    <circle cx="68" cy="86" r="46" fill="url(#fabricBg)"/>
+    <path d="M60 48C81 48 98 59 104 76C99 93 80 108 55 110C39 111 26 103 18 90C21 66 39 48 60 48Z" fill="#F7F1EC" fill-opacity="0.88"/>
+    <path d="M47 87C63 72 92 69 109 82C96 103 74 113 49 111C35 110 26 103 22 94C29 90 38 88 47 87Z" fill="url(#fabricRoll)"/>
+    <path d="M34 99C46 104 58 106 72 104C86 102 97 96 109 87" stroke="#EFD6BF" stroke-width="4" stroke-linecap="round"/>
+    <path d="M38 57C48 72 62 83 84 88" stroke="#764F3D" stroke-width="4" stroke-linecap="round" opacity="0.75"/>
+  </g>
+
+  <g>
+    <text x="148" y="83" fill="#2C1F1C" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="1.5">BELLA</text>
+    <text x="151" y="118" fill="#8C5E4D" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="8">TELA</text>
+    <path d="M150 132H456" stroke="#CBA17A" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

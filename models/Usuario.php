@@ -187,6 +187,15 @@ class Usuario
         return $resultado ? $token : null;
     }
 
+    public function invalidarTokenRecuperacion(string $token): void
+    {
+        $tokenHash = hash('sha256', $token);
+        $stmt = $this->conn->prepare('UPDATE recuperacion_password SET usado = 1 WHERE token_hash = ? AND usado = 0');
+        $stmt->bind_param('s', $tokenHash);
+        $stmt->execute();
+        $stmt->close();
+    }
+
     public function obtenerPorToken(string $token): ?array
     {
         $tokenHash = hash('sha256', $token);

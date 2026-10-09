@@ -13,7 +13,7 @@
     <!-- ============================================== -->
     <!-- MÓDULO DE AYUDA Y SOPORTE (HU-011 / RF-11)   -->
     <!-- ============================================== -->
-    <button class="btn btn-help-float shadow-lg rounded-circle" data-bs-toggle="modal" data-bs-target="#helpCenterModal" title="Centro de Ayuda" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background-color: var(--color-secundario); color: white; border: none; z-index: 1000;">
+    <button class="btn btn-help-float shadow-lg rounded-circle" data-bs-toggle="modal" data-bs-target="#helpCenterModal" title="Centro de Ayuda" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background-color: var(--color-botones); color: white; border: none; z-index: 1000;">
         <i class="fa-solid fa-headset"></i>
     </button>
 
@@ -21,21 +21,63 @@
     <div class="modal fade" id="helpCenterModal" tabindex="-1" aria-labelledby="helpCenterModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header text-white rounded-top-4 border-0 p-4" style="background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));">
-                    <h5 class="modal-title fw-bold text-white" id="helpCenterModalLabel">
-                        <i class="fa-solid fa-life-ring me-2 text-warning"></i> Centro de Ayuda y Soporte
+                <div class="modal-header help-modal-header rounded-top-4 border-0 p-4">
+                    <h5 class="modal-title fw-bold" id="helpCenterModalLabel">
+                        <i class="fa-solid fa-life-ring me-2 help-accent"></i> Centro de Ayuda y Soporte
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn border-0 p-0 help-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
                 <div class="modal-body p-4">
+                    <style>
+                        #helpCenterModal .help-modal-header {
+                            background: var(--color-menu);
+                            color: var(--color-menu-texto);
+                            border-bottom: 3px solid var(--color-acento) !important;
+                        }
+                        #helpCenterModal .help-accent,
+                        #helpCenterModal .help-email-icon {
+                            color: var(--color-acento);
+                        }
+                        #helpCenterModal .help-close {
+                            color: var(--color-menu-texto);
+                            background: transparent;
+                            font-size: 1.5rem;
+                            line-height: 1;
+                        }
+                        #help-tabs .nav-link {
+                            background: rgba(var(--color-botones-rgb), 0.08);
+                            color: var(--color-secundario);
+                            border: 1px solid rgba(var(--color-botones-rgb), 0.2);
+                            transition: all 0.2s ease;
+                        }
+                        #help-tabs .nav-link.active {
+                            background: var(--color-botones);
+                            color: #fff;
+                            border-color: var(--color-botones);
+                            box-shadow: 0 8px 18px rgba(var(--color-botones-rgb), 0.22);
+                        }
+                        #helpCenterModal .help-email-button {
+                            background: var(--color-botones);
+                            border: 1px solid var(--color-botones);
+                            color: #fff;
+                            box-shadow: 0 8px 18px rgba(var(--color-botones-rgb), 0.22);
+                        }
+                        #helpCenterModal .help-email-button:hover,
+                        #helpCenterModal .nav-link.active:hover {
+                            filter: brightness(0.9);
+                            color: #fff;
+                        }
+                    </style>
                     <ul class="nav nav-pills mb-4 gap-2" id="help-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-pill fw-bold px-4" id="contact-tab" data-bs-toggle="pill" data-bs-target="#contact-panel" type="button" role="tab" style="color: var(--color-secundario);">
+                            <button class="nav-link active rounded-pill fw-bold px-4" id="contact-tab" data-bs-toggle="pill" data-bs-target="#contact-panel" type="button" role="tab">
                                 <i class="fa-solid fa-address-book me-1"></i> Contacto y Soporte
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-pill fw-bold px-4" id="faq-tab" data-bs-toggle="pill" data-bs-target="#faq-panel" type="button" role="tab" style="color: var(--color-secundario);">
+                            <button class="nav-link rounded-pill fw-bold px-4" id="faq-tab" data-bs-toggle="pill" data-bs-target="#faq-panel" type="button" role="tab">
                                 <i class="fa-solid fa-circle-question me-1"></i> Preguntas Frecuentes
                             </button>
                         </li>
@@ -55,10 +97,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="card h-100 border-0 bg-light rounded-4 p-4 text-center shadow-sm">
-                                        <div class="display-5 text-primary mb-3" style="color: var(--color-primario) !important;"><i class="fa-solid fa-envelope"></i></div>
+                                        <div class="display-5 mb-3 help-email-icon"><i class="fa-solid fa-envelope"></i></div>
                                         <h5 class="fw-bold text-dark">Contacto Administrativo</h5>
                                         <p class="text-muted small">Solicitudes de creación de nuevos usuarios o modificación de permisos.</p>
-                                        <a href="mailto:admin@sigibet.com" class="btn text-white rounded-pill mt-auto fw-bold px-4" style="background-color: var(--color-secundario);">Enviar Email</a>
+                                        <a href="mailto:admin@sigibet.com" class="btn help-email-button rounded-pill mt-auto fw-bold px-4">Enviar Email</a>
                                     </div>
                                 </div>
                             </div>

@@ -81,12 +81,6 @@ require_once __DIR__ . '/../Layoust/header.php';
                                 <span class="text-muted fw-bold small">SUBTOTAL</span>
                                 <span class="h6 mb-0 fw-bold text-dark" id="txt-subtotal">$0</span>
                             </div>
-                            <?php if ($impuestoConf > 0): ?>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted fw-bold small">IVA (<?php echo $impuestoConf; ?>%)</span>
-                                <span class="h6 mb-0 fw-bold text-dark" id="txt-iva">$0</span>
-                            </div>
-                            <?php endif; ?>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-dark border-opacity-10">
                                 <span class="text-dark fw-bold">TOTAL A PAGAR</span>
                                 <span class="h3 mb-0 fw-bold text-success" id="txt-total">$0</span>
@@ -101,17 +95,16 @@ require_once __DIR__ . '/../Layoust/header.php';
                                 <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
                             </select>
 
-                            <label class="form-label small text-muted fw-bold">Cliente Asociado (Opcional)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fa-solid fa-user"></i></span>
-                                <select id="cliente-id" class="form-select">
-                                    <option value="">Consumidor Final (Sin nombre)</option>
-                                    <!-- Options via JS -->
-                                </select>
+                            <div class="small text-muted">
+                                <i class="fa-solid fa-user-tag me-1"></i>
+                                El cliente recibirá un ID automático al confirmar la compra.
                             </div>
                         </div>
                         
                         <div class="d-grid gap-2 p-3">
+                            <button class="btn btn-outline-secondary fw-bold" id="btn-cotizar" disabled>
+                                <i class="fa-solid fa-file-lines me-2"></i>Generar Cotización
+                            </button>
                             <button class="btn btn-primary btn-lg fw-bold" id="btn-confirmar" disabled>
                                 <i class="fa-solid fa-check-circle me-2"></i>Confirmar Venta
                             </button>
@@ -144,23 +137,10 @@ require_once __DIR__ . '/../Layoust/header.php';
         
         const btnConfirmar = document.getElementById('btn-confirmar');
         const btnCancelar = document.getElementById('btn-cancelar');
+        const btnCotizar = document.getElementById('btn-cotizar');
         const selectMetodo = document.getElementById('metodo-pago');
-        const selectCliente = document.getElementById('cliente-id');
 
         let timerBusqueda = null;
-
-        // --- CARGAR CLIENTES ---
-        fetch('../../controllers/auth/ClienteController.php?action=listarAjax')
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.innerText = c.nombre + ' (' + c.documento + ')';
-                    selectCliente.appendChild(opt);
-                });
-            })
-            .catch(err => console.error("Error cargando clientes:", err));
 
         // --- BUSCADOR ---
         inputBuscador.addEventListener('input', function() {
@@ -238,7 +218,7 @@ require_once __DIR__ . '/../Layoust/header.php';
 
         // --- CARRITO ---
         function agregarAlCarrito(producto) {
-            const existe = carrito.find(item => item.id === producto.id);
+            const existe = carrito.find(item => String(item.id) === String(producto.id));
             if (existe) {
                 if (existe.cantidad < parseInt(producto.stock)) {
                     existe.cantidad++;
@@ -263,12 +243,12 @@ require_once __DIR__ . '/../Layoust/header.php';
         }
 
         function eliminarDelCarrito(id) {
-            carrito = carrito.filter(item => item.id !== id);
+            carrito = carrito.filter(item => String(item.id) !== String(id));
             renderizarCarrito();
         }
 
         function cambiarCantidad(id, nuevaCantidad) {
-            const item = carrito.find(i => i.id === id);
+            const item = carrito.find(i => String(i.id) === String(id));
             if (!item) return;
 
             let cant = parseInt(nuevaCantidad);
@@ -288,9 +268,11 @@ require_once __DIR__ . '/../Layoust/header.php';
                 tbodyCarrito.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">El carrito está vacío</td></tr>';
                 btnConfirmar.disabled = true;
                 btnCancelar.disabled = true;
+                btnCotizar.disabled = true;
             } else {
                 btnConfirmar.disabled = false;
                 btnCancelar.disabled = false;
+                btnCotizar.disabled = false;
 
                 carrito.forEach(item => {
                     const itemSubtotal = item.precio * item.cantidad;
@@ -308,7 +290,7 @@ require_once __DIR__ . '/../Layoust/header.php';
                             <small class="text-muted">Ref: ${item.referencia} | ${precioFmt}</small>
                         </td>
                         <td>
-                            <input type="number" class="form-control form-control-sm text-center" value="${item.cantidad}" min="1" max="${item.stockMax}" onchange="window.posCambiarCantidad(${item.id}, this.value)">
+                            <input type="number" class="form-control form-control-sm text-center" value="${item.cantidad}" min="1" max="${item.stockMax}" data-product-id="${item.id}" oninput="window.posCambiarCantidad(${item.id}, this.value)">
                         </td>
                         <td class="text-end fw-bold text-dark">${subtFmt}</td>
                         <td class="text-end">
@@ -328,18 +310,103 @@ require_once __DIR__ . '/../Layoust/header.php';
             const total = subtotal + iva;
 
             const subFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(subtotal);
-            const ivaFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(iva);
             const totalFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(total);
             
             txtSubtotal.innerText = subFmt;
-            if (document.getElementById('txt-iva')) {
-                document.getElementById('txt-iva').innerText = ivaFmt;
-            }
             txtTotal.innerText = totalFmt;
             cartCount.innerText = totalItems + (totalItems === 1 ? ' ítem' : ' ítems');
         }
 
+        function sincronizarCantidades() {
+            tbodyCarrito.querySelectorAll('input[data-product-id]').forEach(input => {
+                const item = carrito.find(i => String(i.id) === input.dataset.productId);
+                if (!item) return;
+                const cantidad = parseInt(input.value, 10);
+                item.cantidad = Math.min(item.stockMax, Math.max(1, isNaN(cantidad) ? 1 : cantidad));
+            });
+        }
+
         // --- ACCIONES ---
+        btnCotizar.addEventListener('click', () => {
+            if (carrito.length === 0) return;
+            sincronizarCantidades();
+
+            const ventanaCotizacion = window.open('', '_blank');
+            if (!ventanaCotizacion) {
+                alert('Permite las ventanas emergentes para generar e imprimir la cotización.');
+                return;
+            }
+
+            const formatoMoneda = valor => new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                maximumFractionDigits: 0
+            }).format(valor);
+            const escaparHtml = valor => String(valor).replace(/[&<>"']/g, caracter => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[caracter]);
+            const subtotal = carrito.reduce((suma, item) => suma + item.precio * item.cantidad, 0);
+            const iva = subtotal * (tasaImpuesto / 100);
+            const total = subtotal + iva;
+            const filas = carrito.map(item => `
+                <tr>
+                    <td>${escaparHtml(item.nombre)}<small>Ref: ${escaparHtml(item.referencia)}</small></td>
+                    <td class="number">${item.cantidad}</td>
+                    <td class="number">${formatoMoneda(item.precio)}</td>
+                    <td class="number">${formatoMoneda(item.precio * item.cantidad)}</td>
+                </tr>
+            `).join('');
+            const fecha = new Intl.DateTimeFormat('es-CO', {
+                dateStyle: 'long',
+                timeStyle: 'short'
+            }).format(new Date());
+
+            ventanaCotizacion.document.open();
+            ventanaCotizacion.document.write(`<!doctype html>
+                <html lang="es">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Cotización - Bella Tela</title>
+                    <style>
+                        body{font-family:Arial,sans-serif;color:#252525;margin:32px}
+                        header{border-bottom:3px solid #c89b3c;padding-bottom:16px;margin-bottom:24px}
+                        h1{margin:0;color:#b85c76}h2{margin:8px 0 0;letter-spacing:2px}
+                        .muted,small{color:#666}small{display:block;margin-top:4px}
+                        table{width:100%;border-collapse:collapse;margin-top:24px}
+                        th,td{padding:12px 8px;border-bottom:1px solid #ddd;text-align:left}
+                        th{background:#f6eef0}.number{text-align:right;white-space:nowrap}
+                        .totals{width:min(360px,100%);margin:24px 0 0 auto}
+                        .totals div{display:flex;justify-content:space-between;padding:7px 0}
+                        .grand{border-top:2px solid #c89b3c;font-size:20px;font-weight:bold}
+                        .note{margin-top:28px;color:#666;font-size:13px}
+                        .actions{margin-top:24px}
+                        button{background:#b85c76;color:#fff;border:0;border-radius:5px;padding:10px 18px;cursor:pointer}
+                        @media print{body{margin:15mm}.actions{display:none}}
+                    </style>
+                </head>
+                <body>
+                    <header><h1>Bella Tela</h1><h2>COTIZACIÓN</h2><div class="muted">${fecha}</div></header>
+                    <table>
+                        <thead><tr><th>Producto</th><th class="number">Cantidad</th><th class="number">Precio unitario</th><th class="number">Subtotal</th></tr></thead>
+                        <tbody>${filas}</tbody>
+                    </table>
+                    <section class="totals">
+                        <div><span>Subtotal</span><strong>${formatoMoneda(subtotal)}</strong></div>
+                        <div><span>IVA (${tasaImpuesto}%)</span><strong>${formatoMoneda(iva)}</strong></div>
+                        <div class="grand"><span>Total cotizado</span><span>${formatoMoneda(total)}</span></div>
+                    </section>
+                    <p class="note">Esta cotización no confirma una venta ni descuenta existencias.</p>
+                    <div class="actions"><button onclick="window.print()">Imprimir cotización</button></div>
+                </body>
+                </html>`);
+            ventanaCotizacion.document.close();
+        });
+
         btnCancelar.addEventListener('click', () => {
             if(typeof Swal !== 'undefined') {
                 Swal.fire({
@@ -366,6 +433,8 @@ require_once __DIR__ . '/../Layoust/header.php';
 
         btnConfirmar.addEventListener('click', () => {
             if (carrito.length === 0) return;
+            sincronizarCantidades();
+            const ventanaFactura = window.open('about:blank', '_blank');
 
             const btnOriginalText = btnConfirmar.innerHTML;
             btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
@@ -378,7 +447,6 @@ require_once __DIR__ . '/../Layoust/header.php';
             const payload = {
                 carrito: carrito.map(i => ({ id: i.id, cantidad: i.cantidad, precio: i.precio })),
                 metodo_pago: selectMetodo.value,
-                cliente_id: selectCliente.value ? parseInt(selectCliente.value) : null,
                 subtotal: currentSubtotal,
                 iva: currentIva,
                 total: currentTotal
@@ -392,10 +460,15 @@ require_once __DIR__ . '/../Layoust/header.php';
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    const urlFactura = `../factura.php?venta_id=${encodeURIComponent(data.venta_id)}`;
+                    if (ventanaFactura) ventanaFactura.location.href = urlFactura;
                     if(typeof Swal !== 'undefined') {
                         Swal.fire({
                             title: '¡Venta Confirmada!',
-                            text: `Factura generada: ${data.codigo_factura}`,
+                            text: ventanaFactura
+                                ? `Cliente #${data.cliente_id}. Factura ${data.codigo_factura} lista para imprimir.`
+                                : `Cliente #${data.cliente_id}. Factura ${data.codigo_factura} generada. Permite las ventanas emergentes para imprimirla.`,
+                            html: ventanaFactura ? '' : `<a href="${urlFactura}" target="_blank" rel="noopener">Abrir e imprimir la factura</a>`,
                             icon: 'success',
                             confirmButtonColor: '#10b981'
                         }).then(() => {
@@ -405,15 +478,21 @@ require_once __DIR__ . '/../Layoust/header.php';
                         });
                     } else {
                         alert('¡Venta Exitosa!\nFactura: ' + data.codigo_factura);
+                        if (!ventanaFactura) {
+                            window.location.href = urlFactura;
+                            return;
+                        }
                         carrito = [];
                         renderizarCarrito();
                         buscarProductos(inputBuscador.value);
                     }
                 } else {
+                    if (ventanaFactura) ventanaFactura.close();
                     throw new Error(data.mensaje || 'Error desconocido.');
                 }
             })
             .catch(err => {
+                if (ventanaFactura && !ventanaFactura.closed) ventanaFactura.close();
                 console.error(err);
                 if(typeof Swal !== 'undefined') {
                     Swal.fire('Error', err.message || 'No se pudo procesar la venta.', 'error');
@@ -434,4 +513,3 @@ require_once __DIR__ . '/../Layoust/header.php';
 // Incluir el footer
 require_once __DIR__ . '/../Layoust/footer.php';
 ?>
-

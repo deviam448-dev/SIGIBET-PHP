@@ -8,11 +8,13 @@ SIGIBET permite gestionar:
 
 - productos por categoría y referencia
 - inventario y stock mínimo
-- ventas y clientes
+- ventas con un ID anónimo de cliente autoincremental por compra
 - usuarios con roles
 - reportes y auditoría
 - configuración del negocio
+- colores independientes para botones, menús y acentos, y selector de tipografía
 - autenticación y recuperación de acceso
+- cálculo configurable del IVA (19% predeterminado) en ventas y cotizaciones
 
 ## Tecnologías
 
@@ -41,7 +43,12 @@ SIGIBET/
 │   └── img/
 ├── sql/
 │   ├── db.sql
-│   └── datos_prueba.sql
+│   ├── datos_prueba.sql
+│   └── migraciones/
+│       ├── 20261009_clientes_por_compra.sql
+│       ├── 20261009_iva_general_19.sql
+│       ├── 20261009_opciones_apariencia.sql
+│       └── 20261009_acento_verde_oliva.sql
 ├── views/
 │   ├── admin/
 │   ├── Auth/
@@ -77,6 +84,16 @@ sql/db.sql
 ```
 
 Esto crea la base de datos `sigibet_db` y carga la semilla inicial.
+
+Si ya tienes la base de datos instalada, ejecuta una sola vez
+`sql/migraciones/20261009_clientes_por_compra.sql` para permitir los registros
+anónimos de clientes y `sql/migraciones/20261009_iva_general_19.sql` para
+establecer el IVA general en 19%. Ejecuta también
+`sql/migraciones/20261009_opciones_apariencia.sql` para agregar la configuración
+separada de colores y tipografía y `sql/migraciones/20261009_acento_verde_oliva.sql`
+para establecer el nuevo color de acento. Las ventas nuevas crearán un registro de
+cliente por compra y usarán su ID autoincremental; los datos históricos no se
+borran.
 
 ### 3. Configurar conexión
 

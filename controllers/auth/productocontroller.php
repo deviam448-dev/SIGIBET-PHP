@@ -62,6 +62,7 @@ class ProductoController
         $precio_compra = floatval($_POST['precio_compra'] ?? 0);
         $stock = intval($_POST['stock'] ?? 0);
         $stock_minimo = intval($_POST['stock_minimo'] ?? 5);
+        $imagen = $this->guardarImagenSubida($_FILES['imagen'] ?? null);
 
         // Validaciones estrictas
         if (empty($referencia) || empty($nombre) || empty($color)) {
@@ -86,7 +87,7 @@ class ProductoController
         }
 
         // Guardar (ahora retorna el ID insertado)
-        $id_nuevo_producto = $this->modelo->registrar($referencia, $nombre, $color, $categoria, $descripcion, $precio, $precio_compra, $stock, $stock_minimo);
+        $id_nuevo_producto = $this->modelo->registrar($referencia, $nombre, $color, $categoria, $descripcion, $precio, $precio_compra, $stock, $stock_minimo, 1, $imagen);
 
         if ($id_nuevo_producto) {
             // Registrar auditoria
@@ -126,6 +127,8 @@ class ProductoController
         $stock = intval($_POST['stock'] ?? 0); // En actualización, podemos validar si quieren ajustar el stock directo
         $stock_minimo = intval($_POST['stock_minimo'] ?? 5);
         $estado = intval($_POST['estado'] ?? 1);
+        $imagen = $this->guardarImagenSubida($_FILES['imagen'] ?? null);
+        $eliminarImagen = isset($_POST['eliminar_imagen']);
 
         if ($id <= 0) {
             $this->setAlert('error', 'Error crítico', 'No se identificó el producto a actualizar.');
@@ -151,6 +154,14 @@ class ProductoController
             }
         }
 
+        if ($eliminarImagen || $imagen !== null) {
+            $imagenAnterior = $producto_actual['imagen'] ?? null;
+            if ($imagenAnterior && str_starts_with($imagenAnterior, 'productos/')) {
+                $rutaAnterior = __DIR__ . '/../../public/img/' . $imagenAnterior;
+                if (is_file($rutaAnterior)) unlink($rutaAnterior);
+            }
+        }
+
         $datos = [
             'referencia' => $referencia,
             'nombre' => $nombre,
@@ -162,6 +173,7 @@ class ProductoController
             'stock_minimo' => $stock_minimo,
             'estado' => $estado
         ];
+        if ($eliminarImagen || $imagen !== null) $datos['imagen'] = $imagen;
 
         $exito = $this->modelo->actualizar($id, $datos);
 
@@ -199,11 +211,30 @@ class ProductoController
     }
 
     /**
-     * Maneja la eliminación restringida de un producto.
+     * Archiva un producto desde una acción exclusiva del administrador.
      */
-    public function eliminar()
+    public function archivar()
     {
-        $id = intval($_GET['id'] ?? 0);
+        if (!AuthController::esAdmin()) {
+            http_response_code(403);
+            exit('Acceso denegado: solo un administrador puede archivar productos.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            header('Allow: POST');
+            exit('Método no permitido.');
+        }
+
+        $csrfSesion = $_SESSION['csrf_archivar_producto'] ?? '';
+        $csrfEnviado = $_POST['csrf_token'] ?? '';
+        if (!is_string($csrfSesion) || $csrfSesion === '' || !is_string($csrfEnviado)
+            || !hash_equals($csrfSesion, $csrfEnviado)) {
+            http_response_code(403);
+            exit('La solicitud expiró o no es válida. Recarga el catálogo e inténtalo de nuevo.');
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) {
             $this->setAlert('error', 'Error', 'ID de producto inválido.');
             $this->redirect();
@@ -212,23 +243,26 @@ class ProductoController
         $producto = $this->modelo->obtenerPorId($id);
         
         if (!$producto) {
-            $this->setAlert('error', 'No encontrado', 'El producto que intenta eliminar ya no existe.');
+            $this->setAlert('error', 'No encontrado', 'El producto que intenta archivar ya no existe.');
             $this->redirect();
         }
 
-        // REGLA DE NEGOCIO: No permitir eliminar si hay stock > 0
-        if ($producto['stock'] > 0) {
-            $this->setAlert('warning', 'Operación Denegada', 'No se puede eliminar este producto porque actualmente cuenta con ' . $producto['stock'] . ' unidades en stock. Realiza un ajuste de inventario primero.');
+        if ((int)$producto['estado'] !== 1) {
+            $this->setAlert('warning', 'Producto archivado', 'Este producto ya está archivado.');
             $this->redirect();
         }
 
-        $exito = $this->modelo->eliminar($id);
+        $exito = $this->modelo->archivar($id);
 
         if ($exito === true) {
-            Auditoria::registrar('Productos', 'Eliminar Producto', "ID Producto: $id");
-            $this->setAlert('success', 'Eliminado', 'El producto ha sido eliminado del catálogo.');
+            Auditoria::registrar(
+                'Productos',
+                'Archivar Producto',
+                "ID Producto: $id; Referencia: {$producto['referencia']}; Stock conservado: {$producto['stock']}"
+            );
+            $this->setAlert('success', 'Producto archivado', 'Se ocultó del catálogo público y se conservaron sus existencias e historial.');
         } else {
-            $this->setAlert('error', 'Error de Integridad', 'No se pudo eliminar. Es posible que el producto esté asociado a facturas de venta existentes.');
+            $this->setAlert('error', 'No se pudo archivar', 'El producto no se modificó. Recarga el catálogo e inténtalo de nuevo.');
         }
 
         $this->redirect();
@@ -241,6 +275,29 @@ class ProductoController
             'title' => $title,
             'text' => $text
         ];
+    }
+
+    private function guardarImagenSubida(?array $archivo): ?string
+    {
+        if (!$archivo || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
+        if (($archivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || ($archivo['size'] ?? 0) > 5 * 1024 * 1024) {
+            $this->setAlert('error', 'Imagen inválida', 'La imagen debe pesar menos de 5 MB.');
+            $this->redirect();
+        }
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+        $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($extensiones[$mime])) {
+            $this->setAlert('error', 'Formato inválido', 'Usa una imagen JPG, PNG o WEBP.');
+            $this->redirect();
+        }
+        $directorio = __DIR__ . '/../../public/img/productos';
+        if (!is_dir($directorio)) mkdir($directorio, 0775, true);
+        $nombre = bin2hex(random_bytes(12)) . '.' . $extensiones[$mime];
+        if (!move_uploaded_file($archivo['tmp_name'], $directorio . '/' . $nombre)) {
+            $this->setAlert('error', 'Error de imagen', 'No se pudo guardar la imagen.');
+            $this->redirect();
+        }
+        return 'productos/' . $nombre;
     }
 
     private function redirect()
@@ -262,8 +319,8 @@ if (strtolower(basename($_SERVER['PHP_SELF'] ?? '')) === 'productocontroller.php
         case 'actualizar':
             $controller->actualizar();
             break;
-        case 'eliminar':
-            $controller->eliminar();
+        case 'archivar':
+            $controller->archivar();
             break;
         default:
             header('Location: ../../views/admin/gproductos.php');

@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function actualizarGraficos(datosIngresos, datosTop) {
         // Colores base (Gris, Azul, Amarillo, Coral)
-        const colorAzul = '#3DA9E0';
+        const colorAzul = '#A9D4F5';
         const colorAmarillo = '#F4C430';
         const colorCoral = '#E85D5D';
         const colorCarbon = '#3E3A36';
@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     label: 'Ingresos Diarios',
                     data: valoresIngresos.length ? valoresIngresos : [0],
                     borderColor: colorAzul,
-                    backgroundColor: 'rgba(61, 169, 224, 0.1)',
+                    backgroundColor: 'rgba(169, 212, 245, 0.15)',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: true,

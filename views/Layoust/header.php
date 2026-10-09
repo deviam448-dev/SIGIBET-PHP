@@ -19,17 +19,22 @@ $usuario_inicial = strtoupper(substr($usuario_nombre, 0, 1));
 $_SESSION['usuario_nombre'] = $usuario_nombre;
 
 $configuracion = (new Configuracion())->obtenerConfiguracion();
-$color_secundario = $configuracion['tema_colores'] ?? '#B87983';
-$color_secundario_rgb = sscanf(ltrim($color_secundario, '#'), '%02x%02x%02x');
-$color_secundario_rgb = implode(', ', $color_secundario_rgb ?: [185, 111, 97]);
+$color_botones = $configuracion['color_botones'];
+$color_botones_rgb = implode(', ', sscanf(ltrim($color_botones, '#'), '%02x%02x%02x'));
+$color_menu = $configuracion['color_menu'];
+$color_menu_rgb = sscanf(ltrim($color_menu, '#'), '%02x%02x%02x');
+$color_menu_texto = array_sum($color_menu_rgb) / 3 < 140 ? '#FFFFFF' : '#1C191B';
+$color_acento = $configuracion['color_acento'];
+$tipografia = htmlspecialchars($configuracion['tipografia'], ENT_QUOTES, 'UTF-8');
 
 // Paleta configurable desde Administración > Configuración.
 $tema = [
-            'color_primario'   => '#503A33',
-    'color_secundario' => $color_secundario,
+    'color_primario'   => $color_menu,
+    'color_secundario' => $color_botones,
     'color_fondo'      => '#FCF8F7'
 ];
-$color_rol = ($id_rol_actual == '1') ? '#C98A3D' : $color_secundario;
+$color_rol = ($id_rol_actual == '1') ? $color_acento : $color_botones;
+$texto_color_rol = ($id_rol_actual == '1') ? '#211B16' : '#FFFFFF';
 
 // Lógica de Breadcrumbs
 $c = $_GET['c'] ?? 'producto';
@@ -85,26 +90,36 @@ $rutas_breadcrumb = [
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="../../public/img/style.css" rel="stylesheet">
+    <link href="../../public/img/style.css?v=20261008-2" rel="stylesheet">
     <!-- Chart.js (siempre disponible) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --color-primario:   #4C3C38;
-            --color-secundario: #C99297;
-            --color-fondo:      #F7F3F1;
-            --bs-primary:       #C99297;
-            --bs-primary-rgb:   201, 146, 151;
-            --bs-dark:          #4C3C38;
+            --color-primario:   <?= htmlspecialchars($color_menu, ENT_QUOTES, 'UTF-8') ?>;
+            --color-secundario: <?= htmlspecialchars($color_botones, ENT_QUOTES, 'UTF-8') ?>;
+            --color-botones:    <?= htmlspecialchars($color_botones, ENT_QUOTES, 'UTF-8') ?>;
+            --color-menu:       <?= htmlspecialchars($color_menu, ENT_QUOTES, 'UTF-8') ?>;
+            --color-menu-texto: <?= $color_menu_texto ?>;
+            --color-acento:     <?= htmlspecialchars($color_acento, ENT_QUOTES, 'UTF-8') ?>;
+            --color-botones-rgb: <?= $color_botones_rgb ?>;
+            --color-fondo:      #FAF8F8;
+            --color-superficie: #FFFFFF;
+            --text-primary:     #292528;
+            --bs-primary:       <?= htmlspecialchars($color_botones, ENT_QUOTES, 'UTF-8') ?>;
+            --bs-primary-rgb:   <?= $color_botones_rgb ?>;
+            --bs-dark:          #1C191B;
+            --font-family-base: <?= $tipografia ?>;
         }
         html, body {
             height: 100%;
             margin: 0;
-            background: linear-gradient(180deg, #fdfaf8 0%, #f3efee 100%);
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #FAF8F8;
+            font-family: var(--font-family-base);
+            color: #292528;
         }
+        body, body button, body input, body select, body textarea { font-family: var(--font-family-base); }
         .app-container { height: 100vh; width: 100vw; overflow: hidden; }
         .app-sidebar {
             width: 260px;
@@ -112,42 +127,126 @@ $rutas_breadcrumb = [
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(180deg, #5C4743 0%, #433833 100%);
+            background: var(--color-menu) !important;
+            border-right: 1px solid var(--color-acento);
+            color: var(--color-menu-texto);
             transition: all 0.3s ease;
             z-index: 1040;
+            box-shadow: 18px 0 32px rgba(33, 25, 24, 0.10);
         }
         .sidebar-nav .nav-link {
-            color: rgba(255,255,255,0.75);
+            color: var(--color-menu-texto);
             padding: 0.8rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 10px;
             transition: all 0.2s ease;
             text-decoration: none;
+            border-radius: 12px;
+            margin: 0.18rem 0.75rem;
+            font-weight: 500;
         }
         .sidebar-nav .nav-link:hover {
-            color: #fff;
+            color: var(--color-menu-texto);
             background: rgba(255,255,255,0.08);
-            border-left: 4px solid #D9B6BB;
+            border-left: 4px solid var(--color-acento);
+            transform: translateX(2px);
         }
         .sidebar-nav .nav-link.active {
             color: #fff;
-            background: #C99297;
-            border-left: 4px solid #F7E8EA;
-            box-shadow: 0 4px 12px rgba(201, 146, 151, 0.26);
+            background: rgba(var(--color-botones-rgb), 0.3) !important;
+            border-left: 4px solid var(--color-acento);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
-        .app-main    { height: 100vh; overflow: hidden; }
-        .app-content { overflow-y: auto; background-color: var(--color-fondo); }
-        .stat-card   { border-left: 4px solid var(--color-secundario); }
+        .app-main    { height: 100vh; overflow: hidden; background: #FAF8F8; }
+        .app-content { overflow-y: auto; background: #FAF8F8; }
+        .app-topbar {
+            background: #FFFFFF;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(41,37,40,0.1);
+            box-shadow: 0 10px 25px rgba(28, 25, 27, 0.05);
+        }
+        .stat-card   {
+            border-left: 4px solid var(--color-acento);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
         .btn-primary {
-            background: linear-gradient(135deg, #D9B5BA 0%, #C89299 100%) !important;
-            border-color: #D9B5BA !important;
-            color: #fff !important;
-            box-shadow: 0 5px 16px rgba(201, 146, 151, 0.22);
+            background: var(--color-botones) !important;
+            border-color: var(--color-botones) !important;
+            color: #FFFFFF !important;
+            border-radius: 9999px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #C98B92 0%, #B77780 100%) !important;
-            border-color: #C98B92 !important;
+            filter: brightness(0.88);
+            transform: translateY(-1px);
+        }
+        .app-content .btn-primary,
+        .app-content .btn-primary-custom,
+        .btn-primary-custom {
+            background: var(--color-botones) !important;
+            border-color: var(--color-botones) !important;
+        }
+        .app-content .btn-primary:hover,
+        .app-content .btn-primary-custom:hover,
+        .btn-primary-custom:hover { filter: brightness(0.88); }
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active,
+        .app-sidebar .text-white { color: var(--color-menu-texto) !important; }
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active { border-left-color: var(--color-acento) !important; }
+        .app-sidebar .sidebar-brand { border-bottom-color: var(--color-acento) !important; }
+        .app-content .text-primary,
+        .app-content .text-primary-custom,
+        .breadcrumb a,
+        .breadcrumb .active,
+        .breadcrumb-item > span { color: var(--color-acento) !important; }
+        .app-content .bg-primary,
+        .app-content .bg-primary-custom { background-color: var(--color-botones) !important; }
+        .app-content .page-item.active .page-link {
+            background-color: var(--color-botones) !important;
+            border-color: var(--color-botones) !important;
+        }
+        .app-content .btn-outline-primary {
+            color: var(--color-botones) !important;
+            border-color: var(--color-botones) !important;
+        }
+        .app-content .btn-outline-primary:hover {
+            background-color: var(--color-botones) !important;
+            border-color: var(--color-botones) !important;
+            color: #FFFFFF !important;
+        }
+        .dropdown-menu .logout-link {
+            color: var(--color-secundario) !important;
+        }
+        .dropdown-menu .logout-link:hover,
+        .dropdown-menu .logout-link:focus,
+        .dropdown-menu .logout-link:active {
+            color: var(--color-secundario) !important;
+            background-color: rgba(var(--color-botones-rgb), 0.1) !important;
+        }
+        .app-sidebar .logout-sidebar-link:hover,
+        .app-sidebar .logout-sidebar-link:focus {
+            color: var(--color-acento) !important;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .app-content .form-control:focus,
+        .app-content .form-select:focus {
+            border-color: var(--color-botones) !important;
+            box-shadow: 0 0 0 0.2rem rgba(var(--color-botones-rgb), 0.16) !important;
+        }
+        .app-sidebar,
+        .app-sidebar .text-white,
+        .sidebar-nav .nav-link,
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            color: var(--color-menu-texto) !important;
+        }
+        .stat-card,
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            border-left-color: var(--color-acento) !important;
         }
         @media (max-width: 768px) {
             .app-sidebar {
@@ -229,7 +328,7 @@ $rutas_breadcrumb = [
                         style="background:transparent;">
 
                     <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm text-white fw-bold flex-shrink-0"
-                         style="width:40px;height:40px;background:linear-gradient(135deg,#62483F,#B87983);font-size:1rem;">
+                         style="width:40px;height:40px;background:linear-gradient(135deg,#A85F6D,#854653);font-size:1rem;">
                         <?= $usuario_inicial ?>
                     </div>
 
@@ -238,7 +337,7 @@ $rutas_breadcrumb = [
                             <?= htmlspecialchars($usuario_nombre) ?>
                         </div>
                         <span class="badge rounded-pill px-2"
-                              style="background-color:<?= $color_rol ?>;font-size:.68rem;">
+                              style="background-color:<?= $color_rol ?>;color:<?= $texto_color_rol ?>;font-size:.68rem;">
                             <?= $nombre_rol ?>
                         </span>
                     </div>
@@ -272,7 +371,7 @@ $rutas_breadcrumb = [
                     <?php endif; ?>
 
                     <li>
-                        <a class="dropdown-item text-danger"
+                        <a class="dropdown-item logout-link"
                            href="../../controllers/auth/AuthController.php?accion=logout">
                             <i class="fa-solid fa-right-from-bracket me-2"></i>
                             Cerrar sesión

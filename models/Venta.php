@@ -36,8 +36,7 @@ class Venta
         array $carrito,
         float $subtotal,
         float $total,
-        string $metodoPago = 'Efectivo',
-        ?int $clienteId = null
+        string $metodoPago = 'Efectivo'
     ): array {
 
         try {
@@ -85,6 +84,17 @@ class Venta
             ===================================================== */
 
             $this->conn->begin_transaction();
+
+            $stmtCliente = $this->conn->prepare("
+                INSERT INTO clientes (nombre, documento)
+                VALUES (NULL, NULL)
+            ");
+            if (!$stmtCliente || !$stmtCliente->execute()) {
+                $error = $stmtCliente ? $stmtCliente->error : $this->conn->error;
+                throw new Exception("No se pudo asignar el ID del cliente para esta compra: " . $error);
+            }
+            $clienteId = (int)$this->conn->insert_id;
+            $stmtCliente->close();
 
             /* =====================================================
                GENERAR CÓDIGO DE FACTURA ÚNICO
@@ -209,7 +219,7 @@ class Venta
             ===================================================== */
 
             $queryStock = "
-                SELECT stock
+                SELECT stock, estado
                 FROM productos
                 WHERE id = ?
                 FOR UPDATE
@@ -360,6 +370,12 @@ class Venta
                 $filaStock =
                     $resultadoStock->fetch_assoc();
 
+                if ((int)$filaStock['estado'] !== 1) {
+                    throw new Exception(
+                        "El producto ID {$productoId} está archivado y no se puede vender."
+                    );
+                }
+
                 $stockActual =
                     (int)$filaStock['stock'];
 
@@ -480,7 +496,7 @@ class Venta
             Auditoria::registrar(
                 'Ventas',
                 'Registrar Venta',
-                "Factura: {$codigoFactura} | " .
+                "Factura: {$codigoFactura} | Cliente #{$clienteId} | " .
                 "Total: {$total} | " .
                 "Método: {$metodoPago}"
             );
@@ -491,6 +507,8 @@ class Venta
                     'Venta procesada con éxito.',
                 'venta_id' =>
                     $ventaId,
+                'cliente_id' =>
+                    $clienteId,
                 'codigo_factura' =>
                     $codigoFactura
             ];

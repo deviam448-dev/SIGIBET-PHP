@@ -5,6 +5,7 @@ Thumbs.db
 # Configuraciones locales
 .env
 .env.*
+config/mail.local.php
 
 # Dependencias locales
 /vendor/

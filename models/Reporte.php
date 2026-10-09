@@ -25,7 +25,12 @@ class Reporte
         /* ── Query principal: cabecera de la venta + nombre del vendedor ── */
         $sql = "SELECT v.id, v.codigo_factura, v.usuario_id, v.subtotal, v.total, v.metodo_pago, v.fecha,
                        u.nombre AS usuario_nombre,
-                       COALESCE(c.nombre, 'Consumidor Final') AS cliente_nombre,
+                       CASE
+                           WHEN c.id IS NULL THEN 'Consumidor Final'
+                           WHEN c.nombre IS NULL THEN CONCAT('Cliente #', c.id)
+                           ELSE c.nombre
+                       END AS cliente_nombre,
+                       c.id AS cliente_id,
                        (SELECT SUM(cantidad) FROM detalle_ventas WHERE venta_id = v.id) AS total_articulos
                 FROM ventas v
                 LEFT JOIN usuarios u ON v.usuario_id = u.id

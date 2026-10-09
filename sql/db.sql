@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS productos (
   color VARCHAR(50) NOT NULL DEFAULT 'Palo Rosa',
   categoria VARCHAR(80) NOT NULL DEFAULT 'Moda Femenina',
   descripcion TEXT NULL,
+  imagen VARCHAR(255) NULL,
   precio DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   precio_compra DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   stock INT NOT NULL DEFAULT 0,
@@ -40,8 +41,8 @@ CREATE TABLE IF NOT EXISTS productos (
 
 CREATE TABLE IF NOT EXISTS clientes (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(100) NOT NULL,
-  documento VARCHAR(30) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NULL,
+  documento VARCHAR(30) NULL UNIQUE,
   telefono VARCHAR(30) NULL,
   email VARCHAR(100) NULL,
   direccion VARCHAR(150) NULL,
@@ -100,12 +101,16 @@ CREATE TABLE IF NOT EXISTS configuracion (
   id INT PRIMARY KEY DEFAULT 1,
   nombre_empresa VARCHAR(100) DEFAULT 'SIGIBET Boutique',
   nit VARCHAR(30) DEFAULT '901.458.789-1',
-  telefono VARCHAR(30) DEFAULT '+57 300 123 4567',
+  telefono VARCHAR(30) DEFAULT '+57 321 408 8690',
   email VARCHAR(100) DEFAULT 'contacto@sigibet.com',
-  direccion VARCHAR(150) DEFAULT 'Calle 10 # 43E-15, Medellín',
-  impuesto DECIMAL(5,2) DEFAULT 0,
+  direccion VARCHAR(150) DEFAULT 'Algeciras, Huila',
+  impuesto DECIMAL(5,2) DEFAULT 19.00,
   tipo_facturacion VARCHAR(50) DEFAULT 'Régimen Simplificado',
-  tema_colores TEXT NULL
+  tema_colores TEXT NULL,
+  color_botones VARCHAR(7) NOT NULL DEFAULT '#A85F6D',
+  color_menu VARCHAR(7) NOT NULL DEFAULT '#1C191B',
+  color_acento VARCHAR(7) NOT NULL DEFAULT '#B9BF66',
+  tipografia VARCHAR(30) NOT NULL DEFAULT 'Inter'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS recuperacion_password (
@@ -149,7 +154,7 @@ INSERT IGNORE INTO usuarios (nombre, usuario, email, telefono, password, rol_id,
 
 -- 4. Configuración inicial de la empresa
 INSERT IGNORE INTO configuracion (id, nombre_empresa, nit, telefono, email, direccion, impuesto, tipo_facturacion) VALUES
-(1, 'Bella Tela', '900.123.456-7', '+57 311 555 0100', 'info@bellatela.com', 'Calle 15 # 8-42, Campoalegre, Huila', 0.00, 'Régimen Simplificado');
+(1, 'Bella Tela', '900.123.456-7', '+57 321 408 8690', 'info@bellatela.com', 'Algeciras, Huila', 19.00, 'Régimen Simplificado');
 
 -- --------------------------------------------------------
 -- PRODUCTOS: CATÁLOGO DE TELAS (30 referencias reales)
@@ -200,17 +205,3 @@ INSERT IGNORE INTO productos (referencia, nombre, color, categoria, descripcion,
 ('IN-001', 'Tela Denim 10oz',      'Azul Índigo',   'Industrial', 'Denim 100% algodón de 10 onzas, resistente, ideal para jeans, chaquetas y overoles.',            18000.00, 10500.00, 200, 25, 1),
 ('IN-002', 'Tela Drill Uniformes', 'Kaki',          'Industrial', 'Drill de algodón resistente al desgaste, ideal para uniformes industriales y pantalones de trabajo.', 11000.00, 6000.00, 250, 30, 1),
 ('IN-003', 'Tela Drill Uniformes', 'Verde Militar', 'Industrial', 'Drill de algodón resistente al desgaste, ideal para uniformes industriales y pantalones de trabajo.', 11000.00, 6000.00, 180, 30, 1);
-
--- --------------------------------------------------------
--- CLIENTES DE PRUEBA
--- --------------------------------------------------------
-INSERT IGNORE INTO clientes (nombre, documento, telefono, email, direccion) VALUES
-('Ana Sofía Medina',    '1075890123', '3114567890', 'ana.medina@email.com',    'Cra 5 # 12-34, Campoalegre, Huila'),
-('Costurería El Hilo',  '901234567',  '3125678901', 'elhilo@costureria.com',   'Calle 8 # 4-20, Neiva, Huila'),
-('Modas Valentina',     '1082345678', '3136789012', 'valentina@modas.com',     'Cra 10 # 7-15, Pitalito, Huila'),
-('Daniela Torres Ruiz', '1079456789', '3147890123', 'dtorres@gmail.com',       'Calle 3 # 9-08, Garzón, Huila'),
-('Taller de Confección Luisa', '800987654', '3158901234', 'luisa@taller.com',  'Av. 15 # 22-40, Neiva, Huila'),
-('Sandra Milena Rojas', '1073567890', '3169012345', 'srojas@hotmail.com',      'Cra 7 # 18-22, Campoalegre, Huila'),
-('Boutique Estilo HN',  '900876543',  '3170123456', 'estilo@boutique.com',     'Calle 20 # 5-18, Neiva, Huila'),
-('Rosa Elena Perdomo',  '1071678901', '3181234567', 'rperdomo@gmail.com',      'Cra 3 # 6-44, La Plata, Huila');
-
