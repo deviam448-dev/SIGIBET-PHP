@@ -225,12 +225,24 @@ function colorTipoMovimiento($tipo) {
         <!-- TAB 2: HISTORIAL DE MOVIMIENTOS -->
         <div class="tab-pane fade" id="movimientos" role="tabpanel" aria-labelledby="movimientos-tab">
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                <div class="card-header bg-white py-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary-custom">Últimos 50 Movimientos</h6>
+                    <label class="visually-hidden" for="buscar-movimientos-inventario">Buscar movimientos</label>
+                    <input type="search" class="form-control" id="buscar-movimientos-inventario"
+                           placeholder="Buscar producto, usuario o motivo" style="max-width: 300px;" autocomplete="off">
+                    <label class="visually-hidden" for="filtro-tipo-movimiento">Filtrar tipo de movimiento</label>
+                    <select class="form-select" id="filtro-tipo-movimiento" style="max-width: 210px;">
+                        <option value="">Todos los tipos</option>
+                        <option value="ENTRADA">Entrada</option>
+                        <option value="SALIDA_VENTA">Salida por venta</option>
+                        <option value="AJUSTE">Ajuste</option>
+                        <option value="CREACION">Creación</option>
+                    </select>
                 </div>
                 <div class="card-body">
+                    <p class="small text-muted mb-2" id="movimientos-resultados" aria-live="polite"></p>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle" style="font-size: 0.9rem;">
+                        <table class="table table-bordered table-striped align-middle" id="tabla-movimientos" style="font-size: 0.9rem;">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Fecha</th>
@@ -245,7 +257,8 @@ function colorTipoMovimiento($tipo) {
                             <tbody>
                                 <?php if (count($movimientos) > 0): ?>
                                     <?php foreach ($movimientos as $m): ?>
-                                        <tr>
+                                        <tr data-type="<?php echo htmlspecialchars($m['tipo'], ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-search="<?php echo htmlspecialchars(implode(' ', array_filter([$m['fecha'] ?? '', $m['tipo'] ?? '', $m['referencia'] ?? '', $m['producto_nombre'] ?? '', $m['usuario_nombre'] ?? '', $m['motivo'] ?? ''])), ENT_QUOTES, 'UTF-8'); ?>">
                                             <td>
                                                 <small class="text-muted d-block"><?php echo date('d M Y', strtotime($m['fecha'])); ?></small>
                                                 <strong><?php echo date('H:i', strtotime($m['fecha'])); ?></strong>
@@ -378,6 +391,30 @@ document.addEventListener('DOMContentLoaded', function () {
         enlace.click();
         URL.revokeObjectURL(enlace.href);
     });
+
+    const tablaMovimientos = document.getElementById('tabla-movimientos');
+    const buscarMovimiento = document.getElementById('buscar-movimientos-inventario');
+    const filtroTipoMovimiento = document.getElementById('filtro-tipo-movimiento');
+    const resumenMovimientos = document.getElementById('movimientos-resultados');
+    if (tablaMovimientos && buscarMovimiento && filtroTipoMovimiento && resumenMovimientos) {
+        const movimientos = Array.from(tablaMovimientos.querySelectorAll('tbody tr[data-search]'));
+        const filtrarMovimientos = () => {
+            const consulta = normalizar(buscarMovimiento.value.trim());
+            const tipoSeleccionado = filtroTipoMovimiento.value;
+            let visibles = 0;
+            movimientos.forEach(fila => {
+                const coincideTexto = normalizar(fila.dataset.search || '').includes(consulta);
+                const coincideTipo = !tipoSeleccionado || fila.dataset.type === tipoSeleccionado;
+                fila.hidden = !(coincideTexto && coincideTipo);
+                if (!fila.hidden) visibles++;
+            });
+            resumenMovimientos.textContent = `Mostrando ${visibles} de ${movimientos.length} movimientos`;
+        };
+
+        buscarMovimiento.addEventListener('input', filtrarMovimientos);
+        filtroTipoMovimiento.addEventListener('change', filtrarMovimientos);
+        filtrarMovimientos();
+    }
     filtrar();
 });
 </script>
