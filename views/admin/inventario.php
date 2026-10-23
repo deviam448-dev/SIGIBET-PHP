@@ -120,12 +120,17 @@ function colorTipoMovimiento($tipo) {
         <!-- TAB 1: ESTADO DEL INVENTARIO -->
         <div class="tab-pane fade show active" id="estado" role="tabpanel" aria-labelledby="estado-tab">
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                <div class="card-header bg-white py-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary-custom">Disponibilidad en Bodega</h6>
+                    <label class="visually-hidden" for="buscar-productos-inventario">Buscar productos</label>
+                    <input type="search" class="form-control" id="buscar-productos-inventario"
+                           placeholder="Buscar referencia, producto, categoría o color"
+                           style="max-width: 360px;" autocomplete="off">
                 </div>
                 <div class="card-body">
+                    <p class="small text-muted mb-2" id="inventario-resultados" aria-live="polite"></p>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle">
+                        <table class="table table-bordered table-hover align-middle" id="tabla-inventario">
                             <thead class="table-light">
                                 <tr>
                                     <th>Referencia</th>
@@ -144,7 +149,8 @@ function colorTipoMovimiento($tipo) {
                                 <?php if (count($productos) > 0): ?>
                                     <?php foreach ($productos as $p): ?>
                                         <?php $esBajoStock = ($p['stock'] <= $p['stock_minimo']); ?>
-                                        <tr class="<?php echo implode(' ', array_filter([$esBajoStock ? 'table-danger' : '', (int)$p['estado'] !== 1 ? 'text-muted' : ''])); ?>">
+                                        <tr class="<?php echo implode(' ', array_filter([$esBajoStock ? 'table-danger' : '', (int)$p['estado'] !== 1 ? 'text-muted' : ''])); ?>"
+                                            data-search="<?php echo htmlspecialchars(implode(' ', array_filter([$p['referencia'] ?? '', $p['nombre'] ?? '', $p['categoria'] ?? '', $p['color'] ?? ''])), ENT_QUOTES, 'UTF-8'); ?>">
                                             <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
                                             <td><?php echo htmlspecialchars($p['categoria'] ?: 'Sin categoría'); ?></td>
@@ -253,6 +259,31 @@ function colorTipoMovimiento($tipo) {
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabla = document.getElementById('tabla-inventario');
+    const busqueda = document.getElementById('buscar-productos-inventario');
+    const resumen = document.getElementById('inventario-resultados');
+    if (!tabla || !busqueda || !resumen) return;
+
+    const filas = Array.from(tabla.querySelectorAll('tbody tr[data-search]'));
+    const normalizar = valor => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const filtrar = () => {
+        const consulta = normalizar(busqueda.value.trim());
+        let visibles = 0;
+        filas.forEach(fila => {
+            const coincide = normalizar(fila.dataset.search || '').includes(consulta);
+            fila.hidden = !coincide;
+            if (coincide) visibles++;
+        });
+        resumen.textContent = `Mostrando ${visibles} de ${filas.length} productos`;
+    };
+
+    busqueda.addEventListener('input', filtrar);
+    filtrar();
+});
+</script>
 
 <?php
 // Incluir el footer
