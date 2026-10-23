@@ -130,6 +130,7 @@ function colorTipoMovimiento($tipo) {
                                 <tr>
                                     <th>Referencia</th>
                                     <th>Producto</th>
+                                    <th>Categoría</th>
                                     <th>Color</th>
                                     <th class="text-end">Costo Unit.</th>
                                     <th class="text-end">Costo Total</th>
@@ -144,6 +145,7 @@ function colorTipoMovimiento($tipo) {
                                         <tr class="<?php echo $esBajoStock ? 'table-danger' : ''; ?>">
                                             <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
+                                            <td><?php echo htmlspecialchars($p['categoria'] ?: 'Sin categoría'); ?></td>
                                             <td><?php echo htmlspecialchars($p['color']); ?></td>
                                             <td class="text-end">$<?php echo number_format($p['precio_compra'], 2); ?></td>
                                             <td class="text-end fw-semibold">$<?php echo number_format($p['precio_compra'] * $p['stock'], 2); ?></td>
@@ -161,7 +163,7 @@ function colorTipoMovimiento($tipo) {
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
+                                        <td colspan="8" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
