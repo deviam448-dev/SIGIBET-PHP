@@ -11,6 +11,11 @@ $movimientos = $datos['movimientos'];
 $valor_total = $datos['valor_total'];
 $bajo_stock_count = $datos['bajo_stock_count'];
 $total_unidades = array_sum(array_map(static fn($producto) => (int)$producto['stock'], $productos));
+$categorias = array_unique(array_map(
+    static fn($producto) => trim((string)($producto['categoria'] ?? '')),
+    $productos
+));
+sort($categorias, SORT_NATURAL | SORT_FLAG_CASE);
 
 // Helper para colores de tipo de movimiento
 function colorTipoMovimiento($tipo) {
@@ -133,6 +138,15 @@ function colorTipoMovimiento($tipo) {
                         <option value="bajo">Bajo</option>
                         <option value="optimo">Óptimo</option>
                     </select>
+                    <label class="visually-hidden" for="filtro-categoria-inventario">Filtrar categoría</label>
+                    <select class="form-select" id="filtro-categoria-inventario" style="max-width: 220px;">
+                        <option value="">Todas las categorías</option>
+                        <?php foreach ($categorias as $categoria): ?>
+                            <option value="<?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($categoria !== '' ? $categoria : 'Sin categoría', ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="card-body">
                     <p class="small text-muted mb-2" id="inventario-resultados" aria-live="polite"></p>
@@ -163,6 +177,7 @@ function colorTipoMovimiento($tipo) {
                                         ?>
                                         <tr class="<?php echo implode(' ', array_filter([$esBajoStock ? 'table-danger' : '', (int)$p['estado'] !== 1 ? 'text-muted' : ''])); ?>"
                                             data-search="<?php echo htmlspecialchars(implode(' ', array_filter([$p['referencia'] ?? '', $p['nombre'] ?? '', $p['categoria'] ?? '', $p['color'] ?? ''])), ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-category="<?php echo htmlspecialchars(trim((string)($p['categoria'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>"
                                             data-stock-level="<?php echo $nivelStock; ?>">
                                             <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
@@ -280,19 +295,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const tabla = document.getElementById('tabla-inventario');
     const busqueda = document.getElementById('buscar-productos-inventario');
     const filtroStock = document.getElementById('filtro-stock-inventario');
+    const filtroCategoria = document.getElementById('filtro-categoria-inventario');
     const resumen = document.getElementById('inventario-resultados');
-    if (!tabla || !busqueda || !filtroStock || !resumen) return;
+    if (!tabla || !busqueda || !filtroStock || !filtroCategoria || !resumen) return;
 
     const filas = Array.from(tabla.querySelectorAll('tbody tr[data-search]'));
     const normalizar = valor => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const filtrar = () => {
         const consulta = normalizar(busqueda.value.trim());
         const nivelSeleccionado = filtroStock.value;
+        const categoriaSeleccionada = filtroCategoria.value;
         let visibles = 0;
         filas.forEach(fila => {
             const coincideTexto = normalizar(fila.dataset.search || '').includes(consulta);
             const coincideStock = !nivelSeleccionado || fila.dataset.stockLevel === nivelSeleccionado;
-            const coincide = coincideTexto && coincideStock;
+            const coincideCategoria = !categoriaSeleccionada || fila.dataset.category === categoriaSeleccionada;
+            const coincide = coincideTexto && coincideStock && coincideCategoria;
             fila.hidden = !coincide;
             if (coincide) visibles++;
         });
@@ -301,6 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     busqueda.addEventListener('input', filtrar);
     filtroStock.addEventListener('change', filtrar);
+    filtroCategoria.addEventListener('change', filtrar);
     filtrar();
 });
 </script>
