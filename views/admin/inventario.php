@@ -136,14 +136,15 @@ function colorTipoMovimiento($tipo) {
                                     <th class="text-end">Costo Total</th>
                                     <th class="text-center">Stock Actual</th>
                                     <th class="text-center">Stock Mínimo</th>
-                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Nivel de Stock</th>
+                                    <th class="text-center">Estado del Producto</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (count($productos) > 0): ?>
                                     <?php foreach ($productos as $p): ?>
                                         <?php $esBajoStock = ($p['stock'] <= $p['stock_minimo']); ?>
-                                        <tr class="<?php echo $esBajoStock ? 'table-danger' : ''; ?>">
+                                        <tr class="<?php echo implode(' ', array_filter([$esBajoStock ? 'table-danger' : '', (int)$p['estado'] !== 1 ? 'text-muted' : ''])); ?>">
                                             <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
                                             <td><?php echo htmlspecialchars($p['categoria'] ?: 'Sin categoría'); ?></td>
@@ -161,11 +162,18 @@ function colorTipoMovimiento($tipo) {
                                                     <span class="badge bg-success">Óptimo</span>
                                                 <?php endif; ?>
                                             </td>
+                                            <td class="text-center">
+                                                <?php if ((int)$p['estado'] === 1): ?>
+                                                    <span class="badge bg-primary">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary">Archivado</span>
+                                                <?php endif; ?>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="9" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
+                                        <td colspan="10" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
