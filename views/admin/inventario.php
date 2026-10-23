@@ -154,16 +154,16 @@ function colorTipoMovimiento($tipo) {
                         <table class="table table-bordered table-hover align-middle" id="tabla-inventario">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Referencia</th>
-                                    <th>Producto</th>
-                                    <th>Categoría</th>
-                                    <th>Color</th>
-                                    <th class="text-end">Costo Unit.</th>
-                                    <th class="text-end">Costo Total</th>
-                                    <th class="text-center">Stock Actual</th>
-                                    <th class="text-center">Stock Mínimo</th>
-                                    <th class="text-center">Nivel de Stock</th>
-                                    <th class="text-center">Estado del Producto</th>
+                                    <th data-sort-type="text" tabindex="0" role="button" aria-sort="none">Referencia</th>
+                                    <th data-sort-type="text" tabindex="0" role="button" aria-sort="none">Producto</th>
+                                    <th data-sort-type="text" tabindex="0" role="button" aria-sort="none">Categoría</th>
+                                    <th data-sort-type="text" tabindex="0" role="button" aria-sort="none">Color</th>
+                                    <th class="text-end" data-sort-type="number" tabindex="0" role="button" aria-sort="none">Costo Unit.</th>
+                                    <th class="text-end" data-sort-type="number" tabindex="0" role="button" aria-sort="none">Costo Total</th>
+                                    <th class="text-center" data-sort-type="number" tabindex="0" role="button" aria-sort="none">Stock Actual</th>
+                                    <th class="text-center" data-sort-type="number" tabindex="0" role="button" aria-sort="none">Stock Mínimo</th>
+                                    <th class="text-center" data-sort-type="text" tabindex="0" role="button" aria-sort="none">Nivel de Stock</th>
+                                    <th class="text-center" data-sort-type="text" tabindex="0" role="button" aria-sort="none">Estado del Producto</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -183,26 +183,26 @@ function colorTipoMovimiento($tipo) {
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
                                             <td><?php echo htmlspecialchars($p['categoria'] ?: 'Sin categoría'); ?></td>
                                             <td><?php echo htmlspecialchars($p['color']); ?></td>
-                                            <td class="text-end">$<?php echo number_format($p['precio_compra'], 2); ?></td>
-                                            <td class="text-end fw-semibold">$<?php echo number_format($p['precio_compra'] * $p['stock'], 2); ?></td>
+                                            <td class="text-end" data-sort-value="<?php echo (float)$p['precio_compra']; ?>">$<?php echo number_format($p['precio_compra'], 2); ?></td>
+                                            <td class="text-end fw-semibold" data-sort-value="<?php echo (float)$p['precio_compra'] * (int)$p['stock']; ?>">$<?php echo number_format($p['precio_compra'] * $p['stock'], 2); ?></td>
                                             <td class="text-center">
-                                                <span class="fs-6 fw-bold"><?php echo $p['stock']; ?></span>
+                                                <span class="fs-6 fw-bold" data-sort-value="<?php echo $stockProducto; ?>"><?php echo $p['stock']; ?></span>
                                             </td>
-                                            <td class="text-center"><?php echo (int)$p['stock_minimo']; ?></td>
+                                            <td class="text-center" data-sort-value="<?php echo $stockMinimo; ?>"><?php echo $stockMinimo; ?></td>
                                             <td class="text-center">
                                                 <?php if ($stockProducto === 0): ?>
-                                                    <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Agotado</span>
+                                                    <span class="badge bg-danger" data-sort-value="Agotado"><i class="fa-solid fa-triangle-exclamation me-1"></i>Agotado</span>
                                                 <?php elseif ($esBajoStock): ?>
-                                                    <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Bajo</span>
+                                                    <span class="badge bg-danger" data-sort-value="Bajo"><i class="fa-solid fa-triangle-exclamation me-1"></i>Bajo</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-success">Óptimo</span>
+                                                    <span class="badge bg-success" data-sort-value="Óptimo">Óptimo</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center">
                                                 <?php if ((int)$p['estado'] === 1): ?>
-                                                    <span class="badge bg-primary">Activo</span>
+                                                    <span class="badge bg-primary" data-sort-value="Activo">Activo</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-secondary">Archivado</span>
+                                                    <span class="badge bg-secondary" data-sort-value="Archivado">Archivado</span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -316,10 +316,45 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         resumen.textContent = `Mostrando ${visibles} de ${filas.length} productos`;
     };
+    const ordenar = cabecera => {
+        const indice = cabeceras.indexOf(cabecera);
+        const direccion = cabecera.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+        cabecera.dataset.sortDirection = direccion;
+        const multiplicador = direccion === 'asc' ? 1 : -1;
+
+        filas.sort((filaA, filaB) => {
+            const celdaA = filaA.cells[indice];
+            const celdaB = filaB.cells[indice];
+            const valorA = celdaA.querySelector('[data-sort-value]')?.dataset.sortValue
+                || celdaA.dataset.sortValue
+                || celdaA.textContent.trim();
+            const valorB = celdaB.querySelector('[data-sort-value]')?.dataset.sortValue
+                || celdaB.dataset.sortValue
+                || celdaB.textContent.trim();
+            const comparacion = cabecera.dataset.sortType === 'number'
+                ? Number(valorA) - Number(valorB)
+                : valorA.localeCompare(valorB, 'es', { numeric: true, sensitivity: 'base' });
+            return comparacion * multiplicador;
+        });
+
+        cabeceras.forEach(item => item.setAttribute('aria-sort', 'none'));
+        cabecera.setAttribute('aria-sort', direccion === 'asc' ? 'ascending' : 'descending');
+        tabla.querySelector('tbody').append(...filas);
+    };
 
     busqueda.addEventListener('input', filtrar);
     filtroStock.addEventListener('change', filtrar);
     filtroCategoria.addEventListener('change', filtrar);
+    const cabeceras = Array.from(tabla.querySelectorAll('thead th[data-sort-type]'));
+    cabeceras.forEach(cabecera => {
+        cabecera.addEventListener('click', () => ordenar(cabecera));
+        cabecera.addEventListener('keydown', evento => {
+            if (evento.key === 'Enter' || evento.key === ' ') {
+                evento.preventDefault();
+                ordenar(cabecera);
+            }
+        });
+    });
     filtrar();
 });
 </script>
