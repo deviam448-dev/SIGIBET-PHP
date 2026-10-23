@@ -126,6 +126,13 @@ function colorTipoMovimiento($tipo) {
                     <input type="search" class="form-control" id="buscar-productos-inventario"
                            placeholder="Buscar referencia, producto, categoría o color"
                            style="max-width: 360px;" autocomplete="off">
+                    <label class="visually-hidden" for="filtro-stock-inventario">Filtrar nivel de stock</label>
+                    <select class="form-select" id="filtro-stock-inventario" style="max-width: 190px;">
+                        <option value="">Todos los niveles</option>
+                        <option value="agotado">Agotado</option>
+                        <option value="bajo">Bajo</option>
+                        <option value="optimo">Óptimo</option>
+                    </select>
                 </div>
                 <div class="card-body">
                     <p class="small text-muted mb-2" id="inventario-resultados" aria-live="polite"></p>
@@ -148,9 +155,15 @@ function colorTipoMovimiento($tipo) {
                             <tbody>
                                 <?php if (count($productos) > 0): ?>
                                     <?php foreach ($productos as $p): ?>
-                                        <?php $esBajoStock = ($p['stock'] <= $p['stock_minimo']); ?>
+                                        <?php
+                                            $stockProducto = (int)$p['stock'];
+                                            $stockMinimo = (int)$p['stock_minimo'];
+                                            $esBajoStock = ($stockProducto <= $stockMinimo);
+                                            $nivelStock = $stockProducto === 0 ? 'agotado' : ($esBajoStock ? 'bajo' : 'optimo');
+                                        ?>
                                         <tr class="<?php echo implode(' ', array_filter([$esBajoStock ? 'table-danger' : '', (int)$p['estado'] !== 1 ? 'text-muted' : ''])); ?>"
-                                            data-search="<?php echo htmlspecialchars(implode(' ', array_filter([$p['referencia'] ?? '', $p['nombre'] ?? '', $p['categoria'] ?? '', $p['color'] ?? ''])), ENT_QUOTES, 'UTF-8'); ?>">
+                                            data-search="<?php echo htmlspecialchars(implode(' ', array_filter([$p['referencia'] ?? '', $p['nombre'] ?? '', $p['categoria'] ?? '', $p['color'] ?? ''])), ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-stock-level="<?php echo $nivelStock; ?>">
                                             <td class="fw-bold"><?php echo htmlspecialchars($p['referencia']); ?></td>
                                             <td><?php echo htmlspecialchars($p['nombre']); ?></td>
                                             <td><?php echo htmlspecialchars($p['categoria'] ?: 'Sin categoría'); ?></td>
@@ -162,7 +175,9 @@ function colorTipoMovimiento($tipo) {
                                             </td>
                                             <td class="text-center"><?php echo (int)$p['stock_minimo']; ?></td>
                                             <td class="text-center">
-                                                <?php if ($esBajoStock): ?>
+                                                <?php if ($stockProducto === 0): ?>
+                                                    <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Agotado</span>
+                                                <?php elseif ($esBajoStock): ?>
                                                     <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Bajo</span>
                                                 <?php else: ?>
                                                     <span class="badge bg-success">Óptimo</span>
@@ -264,16 +279,20 @@ function colorTipoMovimiento($tipo) {
 document.addEventListener('DOMContentLoaded', function () {
     const tabla = document.getElementById('tabla-inventario');
     const busqueda = document.getElementById('buscar-productos-inventario');
+    const filtroStock = document.getElementById('filtro-stock-inventario');
     const resumen = document.getElementById('inventario-resultados');
-    if (!tabla || !busqueda || !resumen) return;
+    if (!tabla || !busqueda || !filtroStock || !resumen) return;
 
     const filas = Array.from(tabla.querySelectorAll('tbody tr[data-search]'));
     const normalizar = valor => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const filtrar = () => {
         const consulta = normalizar(busqueda.value.trim());
+        const nivelSeleccionado = filtroStock.value;
         let visibles = 0;
         filas.forEach(fila => {
-            const coincide = normalizar(fila.dataset.search || '').includes(consulta);
+            const coincideTexto = normalizar(fila.dataset.search || '').includes(consulta);
+            const coincideStock = !nivelSeleccionado || fila.dataset.stockLevel === nivelSeleccionado;
+            const coincide = coincideTexto && coincideStock;
             fila.hidden = !coincide;
             if (coincide) visibles++;
         });
@@ -281,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     busqueda.addEventListener('input', filtrar);
+    filtroStock.addEventListener('change', filtrar);
     filtrar();
 });
 </script>
