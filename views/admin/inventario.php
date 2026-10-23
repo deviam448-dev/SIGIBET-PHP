@@ -10,6 +10,7 @@ $productos = $datos['productos'];
 $movimientos = $datos['movimientos'];
 $valor_total = $datos['valor_total'];
 $bajo_stock_count = $datos['bajo_stock_count'];
+$total_unidades = array_sum(array_map(static fn($producto) => (int)$producto['stock'], $productos));
 
 // Helper para colores de tipo de movimiento
 function colorTipoMovimiento($tipo) {
@@ -36,7 +37,7 @@ function colorTipoMovimiento($tipo) {
     <!-- Tarjetas de Resumen -->
     <div class="row mb-4">
         <!-- Valor Total -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card shadow-sm h-100 py-2 border-0" style="border-left: 4px solid var(--bs-primary); border-radius: 12px; transition: transform 0.3s ease;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -54,7 +55,7 @@ function colorTipoMovimiento($tipo) {
         </div>
 
         <!-- Cantidad de Productos -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card shadow-sm h-100 py-2 border-0" style="border-left: 4px solid var(--bs-warning); border-radius: 12px; transition: transform 0.3s ease;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -72,7 +73,7 @@ function colorTipoMovimiento($tipo) {
         </div>
 
         <!-- Alertas de Stock -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card shadow-sm h-100 py-2 border-0" style="border-left: 4px solid var(--bs-danger); border-radius: 12px; transition: transform 0.3s ease;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -83,6 +84,17 @@ function colorTipoMovimiento($tipo) {
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-exclamation-triangle fa-2x" style="color: rgba(232, 93, 93, 0.2);"></i>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card shadow-sm h-100 py-2 border-0" style="border-left: 4px solid var(--bs-success); border-radius: 12px;">
+                                <div class="card-body">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #4a5568; letter-spacing: 0.5px;">
+                                        Unidades en Existencia
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_unidades); ?></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
