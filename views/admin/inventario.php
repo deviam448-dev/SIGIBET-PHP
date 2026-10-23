@@ -147,6 +147,9 @@ function colorTipoMovimiento($tipo) {
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <button type="button" class="btn btn-outline-success" id="exportar-inventario-csv">
+                        <i class="fa-solid fa-file-csv me-1"></i>Exportar CSV
+                    </button>
                 </div>
                 <div class="card-body">
                     <p class="small text-muted mb-2" id="inventario-resultados" aria-live="polite"></p>
@@ -354,6 +357,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 ordenar(cabecera);
             }
         });
+    });
+
+    const botonExportar = document.getElementById('exportar-inventario-csv');
+    botonExportar?.addEventListener('click', () => {
+        const filasVisibles = filas.filter(fila => !fila.hidden);
+        const contenido = [
+            cabeceras.map(cabecera => cabecera.textContent.trim()),
+            ...filasVisibles.map(fila => Array.from(fila.cells, celda => celda.textContent.replace(/\s+/g, ' ').trim()))
+        ];
+        const escaparCsv = valor => {
+            const seguro = /^[=+\-@]/.test(valor) ? `'${valor}` : valor;
+            return `"${seguro.replace(/"/g, '""')}"`;
+        };
+        const csv = contenido.map(fila => fila.map(escaparCsv).join(',')).join('\r\n');
+        const archivo = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+        const enlace = document.createElement('a');
+        enlace.href = URL.createObjectURL(archivo);
+        enlace.download = `inventario-${new Date().toISOString().slice(0, 10)}.csv`;
+        enlace.click();
+        URL.revokeObjectURL(enlace.href);
     });
     filtrar();
 });
