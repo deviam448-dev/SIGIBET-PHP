@@ -135,6 +135,7 @@ function colorTipoMovimiento($tipo) {
                                     <th class="text-end">Costo Unit.</th>
                                     <th class="text-end">Costo Total</th>
                                     <th class="text-center">Stock Actual</th>
+                                    <th class="text-center">Stock Mínimo</th>
                                     <th class="text-center">Estado</th>
                                 </tr>
                             </thead>
@@ -152,6 +153,7 @@ function colorTipoMovimiento($tipo) {
                                             <td class="text-center">
                                                 <span class="fs-6 fw-bold"><?php echo $p['stock']; ?></span>
                                             </td>
+                                            <td class="text-center"><?php echo (int)$p['stock_minimo']; ?></td>
                                             <td class="text-center">
                                                 <?php if ($esBajoStock): ?>
                                                     <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Bajo</span>
@@ -163,7 +165,7 @@ function colorTipoMovimiento($tipo) {
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
+                                        <td colspan="9" class="text-center text-muted py-4">No hay productos en el catálogo.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
